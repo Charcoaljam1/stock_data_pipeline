@@ -1,121 +1,39 @@
 import pandas as pd
+from data_utils import clean_daily, clean_balance, clean_cash, clean_income, clean_info
 
 
-def clean_daily(df):
+def clean_data(df, data_type):
     """
-    Cleans a daily stock market DataFrame by:
-    - Dropping unnecessary columns ('2. high', '3. low').
-    - Converting the index to datetime format.
-    - Renaming columns to more readable names.
-    - Ensuring 'Open', 'Close', and 'Volume' columns have the correct data type (float64).
+    Cleans and processes data based on the specified type.
 
     Parameters:
-    df (pd.DataFrame): DataFrame containing stock market data with specific column names.
+    df (pd.DataFrame): The input data to be cleaned.
+    data_type (str): The type of data ('daily', 'income', 'balance', 'cash', 'info').
 
     Returns:
-    pd.DataFrame: Cleaned DataFrame with updated column names and data types.
+    pd.DataFrame: The cleaned DataFrame.
+
+    Raises:
+    TypeError: If df is not a pandas DataFrame.
+    ValueError: If an unknown data type is passed.
     """
 
-    df.drop(columns=[ '2. high', '3. low'], inplace=True)
-    df.index = pd.to_datetime(df.index, errors="coerce")
-    df.index.name = 'Date'
-
-    df.rename(columns={
-        "1. open": "Open",
-        "4. close": "Close",
-        "5. volume": "Volume"
-    }, inplace=True)
-
-    df[['Open','Close','Volume']] = df[['Open','Close','Volume']].astype('float64')
-
-    return df
-
-def clean_balance(df):
-    """
-    Cleans a balance sheet DataFrame by:
-    - Renaming columns to more readable names.
-    - Selecting only relevant columns.
-    - Converting 'fiscalDateEnding' to datetime format.
-    - Ensuring numeric columns are properly cast to float64.
-
-    Parameters:
-    df (pd.DataFrame): DataFrame containing balance sheet data.
-
-    Returns:
-    pd.DataFrame: Cleaned DataFrame with relevant columns and correct data types.
-    """
-
-    column_name_map = {
-        'fiscalDateEnding': 'fiscal_date_ending',
-        'reportedCurrency': 'reported_currency',
-        'totalAssets': 'total_assets',
-        'totalCurrentAssets': 'total_current_assets',
-        'cashAndCashEquivalentsAtCarryingValue': 'cash_and_cash_equivalents',
-        'cashAndShortTermInvestments': 'cash_and_short_term_investments',
-        'inventory': 'inventory',
-        'currentNetReceivables': 'current_net_receivables',
-        'totalNonCurrentAssets': 'total_non_current_assets',
-        'propertyPlantEquipment': 'property_plant_and_equipment',
-        'accumulatedDepreciationAmortizationPPE': 'accumulated_depreciation_on_ppe',
-        'intangibleAssets': 'intangible_assets',
-        'intangibleAssetsExcludingGoodwill': 'intangible_assets_excl_goodwill',
-        'goodwill': 'goodwill',
-        'investments': 'investments',
-        'longTermInvestments': 'long_term_investments',
-        'shortTermInvestments': 'short_term_investments',
-        'otherCurrentAssets': 'other_current_assets',
-        'otherNonCurrentAssets': 'other_non_current_assets',
-        'totalLiabilities': 'total_liabilities',
-        'totalCurrentLiabilities': 'total_current_liabilities',
-        'currentAccountsPayable': 'current_accounts_payable',
-        'deferredRevenue': 'deferred_revenue',
-        'currentDebt': 'current_debt',
-        'shortTermDebt': 'short_term_debt',
-        'totalNonCurrentLiabilities': 'total_non_current_liabilities',
-        'capitalLeaseObligations': 'capital_lease_obligations',
-        'longTermDebt': 'long_term_debt',
-        'currentLongTermDebt': 'current_long_term_debt',
-        'longTermDebtNoncurrent': 'non_current_long_term_debt',
-        'shortLongTermDebtTotal': 'total_short_long_term_debt',
-        'otherCurrentLiabilities': 'other_current_liabilities',
-        'otherNonCurrentLiabilities': 'other_non_current_liabilities',
-        'totalShareholderEquity': 'total_shareholder_equity',
-        'treasuryStock': 'treasury_stock',
-        'retainedEarnings': 'retained_earnings',
-        'commonStock': 'common_stock',
-        'commonStockSharesOutstanding': 'common_stock_shares_outstanding'
-    }
-
-    df.rename(columns=column_name_map, inplace=True)
-
-    # Define and select relevant columns
-    columns_to_keep = [
-            'fiscal_date_ending', 'total_current_assets', 'total_non_current_assets',
-            'total_current_liabilities', 'total_non_current_liabilities',
-            'total_shareholder_equity', 'short_term_debt', 'long_term_debt',
-            'retained_earnings', 'cash_and_cash_equivalents'
-        ]
-    
-    # Using `.filter(items=...)` to prevent KeyError if a column is missing
-    df.filter(items=columns_to_keep, inplace=True)
-    
-    # Use `.filter(items=...)` to prevent KeyError if a column is missing
-    df['fiscalDateEnding'] = pd.to_datetime(df['fiscalDateEnding'])
-
-    # Convert financial values to float64 safely
-    numeric_columns = [
-        'total_current_assets', 'total_non_current_assets', 'total_current_liabilities',
-        'total_non_current_liabilities', 'total_shareholder_equity', 'short_term_debt',
-        'long_term_debt', 'retained_earnings', 'cash_and_cash_equivalents'
-    ]      
-    df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors="coerce")
-
-    return df
-
-
-def clean_data(df, type):
     if not isinstance(df, pd.DataFrame):
         raise TypeError("Input must be a pandas DataFrame")
+
+    cleaning_functions = {
+        'daily': clean_daily,
+        'income': clean_income,
+        'balance': clean_balance,
+        'cash': clean_cash,
+        'info': clean_info
+        }
+
+     if data_type not in cleaning_functions:
+        raise ValueError(f"Unknown data type '{data_type}'. Expected one of {list(cleaning_functions.keys())}")
+
+    return cleaning_functions[data_type](df)
+
 
 def format_data(data,function,nested=False):
     """
@@ -181,6 +99,28 @@ def format_data(data,function,nested=False):
         
             return eps_data
 
+    # Formats info data
+    elif function == 'info':
+        # Formats nested dictionaries
+        if nested:
+            information = {}
+            for key, values in data.items():
+            info = data.get(['Name','SharesOutstanding'], None)
+            if info is None:
+                raise KeyError(f"[{function}] Expected 'Name' key not found in the nested data for {key}")
+            information[key] = pd.DataFrame.from_dict(info)
+
+            return information
+
+        #Formats simple dictionaries
+        else:
+        info = data.get(['Name','SharesOutstanding'], None)
+        if info is None:
+            raise KeyError("'Name' key not found in the data")
+        information = pd.DataFrame.from_dict(info)
+    
+        return information        
+
     # Formats income statement, cash flow, and balance sheet data
     else:
         # Formats nested dictionaries
@@ -198,7 +138,7 @@ def format_data(data,function,nested=False):
         else:
             statement = data.get('annualReports', None)
             if statement is None:
-                raise KeyError("annualReports' key not found in the data")
+                raise KeyError("'annualReports' key not found in the data")
             financial_data = pd.DataFrame.from_dict(statement)
         
             return financial_data
