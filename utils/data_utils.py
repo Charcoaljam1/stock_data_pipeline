@@ -96,7 +96,7 @@ def clean_balance(df):
         ]
     
     # Using `.filter()` to prevent KeyError if a column is missing
-    df.filter(items=columns_to_keep, inplace=True)
+    df = df.filter(items=columns_to_keep)
     
     df['fiscal_date_ending'] = pd.to_datetime(df['fiscal_date_ending'])
 
@@ -166,7 +166,7 @@ def clean_income(df):
     ]
 
     # Using `.filter()` to prevent KeyError if a column is missing
-    df.filter(items=columns_to_keep, inplace=True)
+    df = df.filter(items=columns_to_keep)
 
     df['fiscal_date_ending'] = pd.to_datetime(df['fiscal_date_ending'])
 
@@ -245,7 +245,7 @@ def clean_cash(df):
     ]
 
     # Using `.filter()` to prevent KeyError if a column is missing
-    df.filter(items=columns_to_keep, inplace=True)
+    df = df.filter(items=columns_to_keep)
 
     df['fiscal_date_ending'] = pd.to_datetime(df['fiscal_date_ending'])
 
@@ -277,7 +277,12 @@ def clean_info(df):
     """
     column_name_map = {
         'Name': 'name',
-        'SharesOutstanding': 'total_shares'
+        'SharesOutstanding': 'total_shares',
+        'Symbol': 'ticker_symbol',
+        'Exchange':'exchange',
+        'Currency': 'currency',
+        'Country': 'country',
+        'Sector': 'sector'
     }
 
     df.rename(columns=column_name_map, inplace=True)

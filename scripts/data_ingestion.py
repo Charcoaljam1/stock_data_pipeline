@@ -1,8 +1,8 @@
 import requests
 import json
-from config import ALPHA_VANTAGE_API_KEY
+from scripts.config import ALPHA_VANTAGE_API_KEY
 
-def get_data(function,symbol):
+def get_data(symbol, function):
     """
         Fetch data from the Alpha Vantage API.
         
@@ -65,8 +65,8 @@ def get_data(function,symbol):
             # Handle the API response
             if response.status_code == 200:
                 results[tick] = response.json()  # Store the response for this symbol
-                with open(f"data/{tick}", "w") as raw_file:
-                    json.dump(tick, raw_file, indent=4)
+                with open(f"data/raw_data/{tick}", "w") as raw_file:
+                    json.dump(results[tick], raw_file, indent=4)
             else:
                 results[tick] = f"Failed to fetch data. Status code: {response.status_code}. Reason: {response.reason}"
 
@@ -93,9 +93,10 @@ def get_data(function,symbol):
     
         # Handle the API response
         if response.status_code == 200:
-            return response.json()
-            with open(f"data/{symbol}", "w") as raw_file:
-                json.dump(symbol, raw_file, indent=4)
+            data = response.json()
+            with open(f"data/raw_data/{symbol}_{function}.json", "w") as raw_file:
+                json.dump(data, raw_file, indent=4)
+            return data
         else:
             return f"Failed to fetch data. Status code: {response.status_code}. Reason: {response.reason}"
 
