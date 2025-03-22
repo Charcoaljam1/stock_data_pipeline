@@ -1,6 +1,7 @@
 import requests
 import json
-from scripts.config import ALPHA_VANTAGE_API_KEY
+from scripts.logger import logger
+from config.config import ALPHA_VANTAGE_API_KEY
 
 def get_data(symbol, function):
     """
@@ -24,7 +25,8 @@ def get_data(symbol, function):
     url = f"https://www.alphavantage.co/query"
 
     if not ALPHA_VANTAGE_API_KEY:
-        return "API key is missing. Please check the 'config.py' file."
+        logger.error("API key is missing. Please check the 'config.py' file.")
+        raise ValueError("API key is missing. Please check the 'config.py' file.")
 
     
     # Map the functions to API parameters
@@ -39,7 +41,10 @@ def get_data(symbol, function):
 
     # Check if the function is valid
     if function not in function_mapping:
-        return f"Invalid function '{function}'. Valid options are: {', '.join(function_mapping.keys())}."
+        logger.error(f"Invalid function '{function}'. Valid options are: {', '.join(function_mapping.keys())}.")
+        raise ValueError(f"Invalid function '{function}'. Valid options are: {', '.join(function_mapping.keys())}.")
+
+    logger.info(f"Fetching data for function '{function}' and symbol(s): {symbol}")
 
     # To handle a list of symbols
     if isinstance(symbol, list):
@@ -60,14 +65,23 @@ def get_data(symbol, function):
                 })
         
             # Make the API request
-            response = requests.get(url, params=parameters)
+            try:
+                response = requests.get(url, params=parameters)
+                response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Failed to fetch data for symbol '{tick}'. Error: {e}")
+                results[tick] = f"Failed to fetch data. Error: {e}"
+                continue
         
             # Handle the API response
             if response.status_code == 200:
-                results[tick] = response.json()  # Store the response for this symbol
-                with open(f"data/raw_data/{tick}", "w") as raw_file:
+                results[tick] = response.json()
+                file_path = f"data/raw_data/{tick}_{function}.json"
+                with open(file_path, "w") as raw_file:
                     json.dump(results[tick], raw_file, indent=4)
+                logger.info(f"Data for symbol '{tick}' saved to {file_path}")
             else:
+                logger.error(f"Failed to fetch data for symbol '{tick}'. Status code: {response.status_code}. Reason: {response.reason}")
                 results[tick] = f"Failed to fetch data. Status code: {response.status_code}. Reason: {response.reason}"
 
         return results  # Return all the results as a dictionary
@@ -89,15 +103,22 @@ def get_data(symbol, function):
             })
     
         # Make the API request
-        response = requests.get(url, params=parameters)
+        try:
+            response = requests.get(url, params=parameters)
+            response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to fetch data for symbol '{symbol}'. Error: {e}")
+            raise RuntimeError(f"Failed to fetch data for symbol '{symbol}'. Error: {e}")
+
     
         # Handle the API response
         if response.status_code == 200:
             data = response.json()
-            with open(f"data/raw_data/{symbol}_{function}.json", "w") as raw_file:
+            file_path = f"data/raw_data/{symbol}_{function}.json"
+            with open(file_path, "w") as raw_file:
                 json.dump(data, raw_file, indent=4)
+            logger.info(f"Data for symbol '{symbol}' saved to {file_path}")
             return data
         else:
-            return f"Failed to fetch data. Status code: {response.status_code}. Reason: {response.reason}"
-
-
+            logger.error(f"Failed to fetch data for symbol '{symbol}'. Status code: {response.status_code}. Reason: {response.reason}")
+            raise RuntimeError(f"Failed to fetch data for symbol '{symbol}'. Status code: {response.status_code}. Reason: {response.reason}")

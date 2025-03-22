@@ -1,6 +1,6 @@
 import pandas as pd
 
-def clean_daily(df):
+def _clean_daily(df):
     """
     Cleans a daily stock market DataFrame by:
     - Dropping unnecessary columns ('2. high', '3. low').
@@ -16,8 +16,10 @@ def clean_daily(df):
     """
 
     df.drop(columns=[ '2. high', '3. low'], inplace=True)
-    df.index = pd.to_datetime(df.index, errors="coerce")
     df.index.name = 'Date'
+    # df.reset_index(inplace=True)
+    df.index = pd.to_datetime(df.index, errors="coerce")
+    
 
     df.rename(columns={
         "1. open": "Open",
@@ -25,11 +27,11 @@ def clean_daily(df):
         "5. volume": "Volume"
     }, inplace=True)
 
-    df[['Open','Close','Volume']] = df[['Open','Close','Volume']].astype('float64')
+    df[['Open','Close','Volume']] = df[['Open','Close','Volume']].apply(pd.to_numeric, errors="coerce")
 
     return df
 
-def clean_balance(df):
+def _clean_balance(df):
     """
     Cleans a balance sheet DataFrame by:
     - Renaming columns to more readable names.
@@ -111,7 +113,7 @@ def clean_balance(df):
 
     return df
 
-def clean_income(df):
+def _clean_income(df):
     """
     Cleans an income statement DataFrame by:
     - Renaming columns to more readable names.
@@ -187,7 +189,7 @@ def clean_income(df):
     return df 
 
 
-def clean_cash(df):
+def _clean_cash(df):
     """
     Cleans an cash flow statement DataFrame by:
     - Renaming columns to more readable names.
@@ -259,11 +261,11 @@ def clean_cash(df):
     df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors="coerce")
 
     # Engineer columns 
-    df['free_cash_flow'] = (df['operating_cashflow']-df['capital_expenditures'])
+    df['free_cashflow'] = (df['operating_cashflow']-df['capital_expenditures'])
 
     return df
 
-def clean_info(df):
+def _clean_info(df):
     """
     Cleans company overview data.
     

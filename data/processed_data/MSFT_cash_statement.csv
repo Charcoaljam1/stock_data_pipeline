@@ -1,4 +1,4 @@
-fiscal_date_ending,operating_cashflow,capital_expenditures,cashflow_from_investment,cashflow_from_financing,dividend_payout,debt_repayments,free_cash_flow
+fiscal_date_ending,operating_cashflow,capital_expenditures,cashflow_from_investment,cashflow_from_financing,dividend_payout,debt_repayments,free_cashflow
 2023-06-30,87582000000,28107000000,-22680000000,-43935000000,19800000000,,59475000000
 2022-06-30,89035000000,23886000000,-30311000000,-58876000000,18135000000,,65149000000
 2021-06-30,76740000000,20622000000,-27577000000,-48486000000,16521000000,,56118000000

@@ -1,69 +1,86 @@
-# Stock Market Data Pipeline & Trading Insights
+# Stock Market Data Pipeline
 
 ## Project Overview
-This project automates the ingestion, storage, transformation, and visualization of stock market data using Alpha Vantage API. It follows a modular structure, ensuring scalability and maintainability. The data pipeline fetches stock prices, processes them, and stores them in a PostgreSQL database. Analytical insights are then generated using visualization tools like Power BI or Plotly Dash. Additionally, the project incorporates a structured approach to logging, error handling, and modular scripting, ensuring that each component operates independently while seamlessly integrating with the rest of the pipeline.
+This project implements a streamlined data pipeline to fetch stock market data from an API, transform it, and load it into a PostgreSQL database. The pipeline is designed to be modular, ensuring maintainability and scalability. It includes robust error handling and logging to ensure smooth operation.
 
 ## Features
-- **Automated Data Ingestion:** Fetch stock market data via API with scheduled updates.
-- **Database Management:** Store and manage data using PostgreSQL with efficient indexing and query optimization.
-- **Data Transformation:** Clean, format, and preprocess raw stock data for accurate insights.
-- **ETL Pipeline:** Automate the extraction, transformation, and loading of data using Apache Airflow.
-- **Visualization & Insights:** Generate dynamic dashboards for stock trends, comparisons, and analysis.
-- **Modular Codebase:** Ensure reusability and maintainability with a structured folder setup.
+- **Automated Data Ingestion:** Fetch stock market data from an API endpoint.
+- **Data Transformation:** Clean and preprocess raw data for storage and analysis.
+- **Database Loading:** Store transformed data in a PostgreSQL database.
 
 ## Folder Structure
 ```
 stock_pipeline_project/
 │── main.py                    # Entry point of the project
-│── data_ingestion.py           # Fetches & stores stock data
-│── data_transformation.py      # Cleans, formats & processes stock data
-│── database_setup.py           # Handles database schema creation & management
-│── config.py                   # Stores API keys, database settings & configurations
+│── README.md                  # Project documentation
+│── requirements.txt           # List of required Python packages
+│── setup.py                   # Optional: For packaging the project
+│── .env                       # Environment variables
+│── .gitignore                 # Git ignore file
+│── .python-version            # Python version file
 │
-├── utils/                      # Utility functions & helper scripts
-│   ├── data_utils.py           # Reusable transformation & preprocessing functions
-│   ├── db_utils.py             # Database connection, query execution & error handling
-│   ├── api_utils.py            # API request functions with rate limit handling
-│   ├── logger.py               # Custom logging functions for tracking execution
+├── config/                    # Configuration files
+│   ├── config.py              # Stores API keys, database settings & configurations
 │
-└── requirements.txt            # List of required Python packages for setup
-└── README.md                   # Project documentation, setup guide & usage instructions
+├── data/                      # Data storage
+│   ├── raw_data/              # Raw data files
+│   ├── processed_data/        # Processed data files
+│
+├── logs/                      # Log files
+│   ├── app.log                # Application logs
+│
+│
+├── scripts/                   # Core scripts for the pipeline
+│   ├── __init__.py            # Marks this directory as a package
+│   ├── data_ingestion.py      # Fetches stock data from the API
+│   ├── data_transformation.py # Cleans, formats & processes stock data
+│   ├── data_loading_oltp.py   # Loads data into the database
+│   ├── database_connection.py # Manages database connections
+│   ├── database_setup.py      # Handles database schema creation
+│   ├── logger.py              # Custom logging functions
+│
+├── tests/                     # Unit and integration tests
+│   ├── test_data_ingestion.py # Tests for data ingestion
+│   ├── test_data_transformation.py # Tests for data transformation
+│   ├── test_database.py       # Tests for database-related functionality
+│
+├── utils/                     # Utility functions
+│   ├── __init__.py            # Marks this directory as a package
+│   ├── data_utils.py          # Reusable transformation & preprocessing functions
 ```
 
 ## Setup & Installation
 ### **1. Install Dependencies**
+Ensure you have Python 3.12+ installed. Then, install the required packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-### **2. Set Up Environment Variables**
-Create a `.env` file or update `config.py` with your API key, database credentials, and other required configurations.
+### **2. Configure Environment**
+Create a `.env` file or update `config.py` with the following:
+- API key for the stock market data provider.
+- PostgreSQL database credentials.
 
-### **3. Run the Project**
+### **3. Run the Pipeline**
+Execute the pipeline by running:
 ```bash
 python main.py
 ```
 
 ## How It Works
-1. **Data Ingestion:** Fetch stock data from Alpha Vantage API and handle response errors.
-2. **Storage:** Store raw data efficiently in a PostgreSQL database.
-3. **Transformation:** Clean, normalize, and process data for in-depth analysis.
-4. **ETL Pipeline:** Automate workflows for continuous data updates.
-5. **Analysis & Visualization:** Generate interactive insights using dynamic dashboards.
+1. **Data Ingestion:** Fetch stock data from the API endpoint.
+2. **Data Transformation:** Clean and preprocess the data for consistency.
+3. **Database Loading:** Insert the transformed data into a PostgreSQL database.
 
 ## Requirements
 - Python 3.12+
 - PostgreSQL
-- Alpha Vantage API Key
-- Apache Airflow (for ETL automation)
-- VS Code or a compatible IDE
+- API Key for stock data provider
 
 ## Future Improvements
-- Implement real-time stock data updates using WebSockets.
-- Expand analysis with ML-based trend predictions and anomaly detection.
-- Enhance dashboards with real-time charts, alerts, and predictive indicators.
-- Optimize database performance with advanced indexing and partitioning.
+- Add support for additional data sources.
+- Implement real-time data updates.
+- Optimize database performance for large datasets.
 
 ## License
 This project is open-source and available for modification and contribution.
-

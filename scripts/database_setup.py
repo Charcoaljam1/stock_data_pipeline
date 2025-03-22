@@ -1,6 +1,7 @@
 import psycopg2
 from psycopg2 import sql
-from scripts.config import DB_CONFIG
+from config.config import DB_CONFIG
+from scripts.logger import logger
 from scripts.database_connection import get_db_connection
 
 def create_tables():
@@ -41,7 +42,8 @@ def create_tables():
             short_term_debt DECIMAL(15,2),
             long_term_debt DECIMAL(15,2),
             retained_earnings DECIMAL(15,2),
-            cash_and_cash_equivalents  DECIMAL(15,2)
+            cash_and_cash_equivalents  DECIMAL(15,2),
+            UNIQUE (company_id, date)
         );
 
         CREATE TABLE IF NOT EXISTS income_statements(
@@ -52,11 +54,12 @@ def create_tables():
             gross_profit DECIMAL(15,2),
             operating_income DECIMAL(15,2),
             net_income DECIMAL(15,2),
-            ebit DECIMAL(10,2),
             interest_expense DECIMAL(15,2),
+            ebit DECIMAL(15,2),
             gross_margin DECIMAL(5,2),
             operating_margin DECIMAL (5,2),
-            ebit_margin DECIMAL (5,2)
+            ebit_margin DECIMAL (5,2),
+            UNIQUE (company_id, date)
         );
 
         CREATE TABLE IF NOT EXISTS cash_flows(
@@ -69,27 +72,26 @@ def create_tables():
             cash_from_financing DECIMAL(15,2),
             dividend_payments DECIMAL(15,2),
             debt_repayments DECIMAL(15,2),
-            free_cash_flow DECIMAL (15,2)   
+            free_cash_flow DECIMAL (15,2),
+            UNIQUE (company_id, date)   
         );
 
         '''
 
     try:
         # Connect to PostgreSQL
-        conn = get_db_connection()
-        cur = conn.cursor()
-
-        cur.execute(create_tables)
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                logger.info("Creating tables...")
+                # Execute the query
+                cur.execute(create_tables)
         
-        # Commit and close
-        conn.commit()
-        print("Schema created successfully!")
-
-        cur.close()
-        conn.close()
+                # Commit and close
+                conn.commit()
+                logger.info("Schema created successfully!")
     
     except Exception as e:
-        print(f"Error creating tables: {e}")
+        logger.error(f"Error creating tables: {e}")
 
 if __name__ == "__main__":
     create_tables() 
