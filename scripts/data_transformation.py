@@ -1,9 +1,9 @@
 import pandas as pd
 from scripts.logger import logger
-from utils.data_utils import _clean_daily, _clean_balance, _clean_cash, _clean_income, _clean_info
+from utils.data_utils import clean_daily, clean_balance, clean_cash, clean_income, clean_info
 
 
-def _clean_data(df, data_type):
+def clean_data(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
     """
     Cleans and processes data based on the specified type.
 
@@ -24,11 +24,11 @@ def _clean_data(df, data_type):
         raise TypeError("Input must be a pandas DataFrame")
 
     cleaning_functions = {
-        'daily': _clean_daily,
-        'income': _clean_income,
-        'balance': _clean_balance,
-        'cash': _clean_cash,
-        'info': _clean_info
+        'daily': clean_daily,
+        'income': clean_income,
+        'balance': clean_balance,
+        'cash': clean_cash,
+        'info': clean_info
         }
 
     if data_type not in cleaning_functions:
@@ -38,7 +38,7 @@ def _clean_data(df, data_type):
     return cleaning_functions[data_type](df)
 
 
-def format_data(data,function,nested=False):
+def format_data(data: pd.DataFrame,function: str,nested=False):
     """
     Format JSON data gotten from the Alpha Vantage API into a pandas DataFrame.
     
@@ -70,7 +70,7 @@ def format_data(data,function,nested=False):
                     logger.error(f"[{function}] Expected 'Time Series (Daily)' key not found in the nested data for {key}")
                     raise KeyError(f"[{function}] Expected 'Time Series (Daily)' key not found in the nested data for {key}")
                 time_series_df = pd.DataFrame.from_dict(time_series, orient='index')
-                cleaned_time_series_df = _clean_data(time_series_df,function)
+                cleaned_time_series_df = clean_data(time_series_df,function)
                 cleaned_time_series_df.to_csv(f"data/processed_data/{key}_stock.csv")
                 stock_data[key] = cleaned_time_series_df
 
@@ -82,7 +82,7 @@ def format_data(data,function,nested=False):
                 logger.error("Expected 'Time Series (Daily)' key not found in the data")
                 raise KeyError("Expected 'Time Series (Daily)' key not found in the data")
             time_series_df = pd.DataFrame.from_dict(time_series, orient='index')
-            cleaned_time_series_df = _clean_data(time_series_df,function)
+            cleaned_time_series_df = clean_data(time_series_df,function)
             cleaned_time_series_df.to_csv(f"data/processed_data/{data['Meta Data']['2. Symbol']}_stock.csv")
             stock_data = cleaned_time_series_df
     
@@ -101,7 +101,7 @@ def format_data(data,function,nested=False):
                     logger.error(f"[{function}] Expected 'Name' key not found in the nested data for {key}")
                     raise KeyError(f"[{function}] Expected 'Name' key not found in the nested data for {key}")
                 info_df = pd.DataFrame([info])
-                cleaned_info_df = _clean_data(info_df,function)
+                cleaned_info_df = clean_data(info_df,function)
                 cleaned_info_df.to_csv(f"data/processed_data/{key}_info.csv", index=False)
                 information[key] = cleaned_info_df
 
@@ -115,7 +115,7 @@ def format_data(data,function,nested=False):
             logger.error("key not found in the data")
             raise KeyError(" key not found in the data")
         info_df = pd.DataFrame([info])
-        cleaned_info_df = _clean_data(info_df,function)
+        cleaned_info_df = clean_data(info_df,function)
         cleaned_info_df.to_csv(f"data/processed_data/{data.get('Symbol')}_info.csv", index=False)
         information = cleaned_info_df
     
@@ -132,7 +132,7 @@ def format_data(data,function,nested=False):
                     logger.error(f"[{function}] Expected 'annualReports' key not found in the nested data for {key}")
                     raise KeyError(f"[{function}] Expected 'annualReports' key not found in the nested data for {key}")
                 statement_df = pd.DataFrame.from_dict(statement)
-                cleaned_statement_df = _clean_data(statement_df,function)
+                cleaned_statement_df = clean_data(statement_df,function)
                 cleaned_statement_df.to_csv(f"data/processed_data/{key}_{function}_statement.csv", index=False)
                 financial_data[key] = cleaned_statement_df
 
@@ -145,7 +145,7 @@ def format_data(data,function,nested=False):
                 logger.error("'annualReports' key not found in the data")
                 raise KeyError("'annualReports' key not found in the data")
             statement_df = pd.DataFrame.from_dict(statement)
-            cleaned_statement_df = _clean_data(statement_df,function)
+            cleaned_statement_df = clean_data(statement_df,function)
             cleaned_statement_df.to_csv(f"data/processed_data/{data['symbol']}_{function}_statement.csv", index=False)
             financial_data = cleaned_statement_df        
 

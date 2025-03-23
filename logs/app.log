@@ -1162,3 +1162,144 @@ DETAIL:  Failing row contains (45, null, null, null, null, null, null, null).
 2025-03-23 07:41:49,580 - ERROR - main - An error occurred during pipeline execution: Too many invalid attempts. Exiting...
 2025-03-23 07:44:33,512 - INFO - main - Setting up the database...
 2025-03-23 07:44:33,513 - INFO - main - Database setup complete.
+2025-03-23 16:31:45,821 - INFO - main - Setting up the database...
+2025-03-23 16:31:45,822 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:31:45,840 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:31:45,840 - INFO - create_tables - Creating tables...
+2025-03-23 16:31:45,943 - INFO - create_tables - Schema created successfully!
+2025-03-23 16:31:45,943 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:31:45,943 - INFO - main - Database setup complete.
+2025-03-23 16:32:58,416 - INFO - main - Starting data ingestion...
+2025-03-23 16:32:58,417 - INFO - get_data - Fetching data for function 'daily' and symbol(s): ['AAPL', 'MSFT', 'META']
+2025-03-23 16:32:59,420 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_daily.json
+2025-03-23 16:33:00,545 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_daily.json
+2025-03-23 16:33:01,294 - INFO - get_data - Data for symbol 'META' saved to data/raw_data/META_daily.json
+2025-03-23 16:33:01,294 - INFO - get_data - Fetching data for function 'balance' and symbol(s): ['AAPL', 'MSFT', 'META']
+2025-03-23 16:33:01,922 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_balance.json
+2025-03-23 16:33:02,571 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_balance.json
+2025-03-23 16:33:03,047 - INFO - get_data - Data for symbol 'META' saved to data/raw_data/META_balance.json
+2025-03-23 16:33:03,048 - INFO - get_data - Fetching data for function 'income' and symbol(s): ['AAPL', 'MSFT', 'META']
+2025-03-23 16:33:03,833 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_income.json
+2025-03-23 16:33:04,532 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_income.json
+2025-03-23 16:33:04,952 - INFO - get_data - Data for symbol 'META' saved to data/raw_data/META_income.json
+2025-03-23 16:33:04,952 - INFO - get_data - Fetching data for function 'cash' and symbol(s): ['AAPL', 'MSFT', 'META']
+2025-03-23 16:33:05,436 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_cash.json
+2025-03-23 16:33:06,065 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_cash.json
+2025-03-23 16:33:06,436 - INFO - get_data - Data for symbol 'META' saved to data/raw_data/META_cash.json
+2025-03-23 16:33:06,436 - INFO - get_data - Fetching data for function 'info' and symbol(s): ['AAPL', 'MSFT', 'META']
+2025-03-23 16:33:06,653 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_info.json
+2025-03-23 16:33:06,886 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_info.json
+2025-03-23 16:33:07,119 - INFO - get_data - Data for symbol 'META' saved to data/raw_data/META_info.json
+2025-03-23 16:33:07,120 - INFO - main - Data ingestion complete.
+2025-03-23 16:33:07,121 - INFO - main - Starting data transformation...
+2025-03-23 16:33:07,407 - INFO - main - Data transformation complete.
+2025-03-23 16:33:07,407 - INFO - main - Starting data loading...
+2025-03-23 16:33:07,407 - INFO - load_nested_data - Processing 'daily' data for AAPL.
+2025-03-23 16:33:07,407 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,421 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,426 - ERROR - load_simple_stock - No company found with ticker symbol: AAPL
+2025-03-23 16:33:07,426 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,427 - INFO - load_nested_data - Processing 'daily' data for MSFT.
+2025-03-23 16:33:07,427 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,442 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,443 - ERROR - load_simple_stock - No company found with ticker symbol: MSFT
+2025-03-23 16:33:07,444 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,444 - INFO - load_nested_data - Processing 'daily' data for META.
+2025-03-23 16:33:07,444 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,458 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,459 - ERROR - load_simple_stock - No company found with ticker symbol: META
+2025-03-23 16:33:07,460 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,460 - INFO - load_nested_data - Finished processing 'daily' data. Total rows inserted: 0. Failed companies: []
+2025-03-23 16:33:07,460 - INFO - load_nested_data - Processing balance sheet for AAPL.
+2025-03-23 16:33:07,460 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,474 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,476 - ERROR - insert_financial_data - No company found with ticker symbol: AAPL
+2025-03-23 16:33:07,476 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,477 - INFO - load_nested_data - Processing balance sheet for MSFT.
+2025-03-23 16:33:07,477 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,500 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,501 - ERROR - insert_financial_data - No company found with ticker symbol: MSFT
+2025-03-23 16:33:07,502 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,502 - INFO - load_nested_data - Processing balance sheet for META.
+2025-03-23 16:33:07,502 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,519 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,522 - ERROR - insert_financial_data - No company found with ticker symbol: META
+2025-03-23 16:33:07,522 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,522 - INFO - load_nested_data - Finished processing balance sheet. Total rows inserted: 0. Failed companies: []
+2025-03-23 16:33:07,522 - INFO - load_nested_data - Processing income statement for AAPL.
+2025-03-23 16:33:07,523 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,546 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,549 - ERROR - insert_financial_data - No company found with ticker symbol: AAPL
+2025-03-23 16:33:07,550 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,550 - INFO - load_nested_data - Processing income statement for MSFT.
+2025-03-23 16:33:07,550 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,570 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,572 - ERROR - insert_financial_data - No company found with ticker symbol: MSFT
+2025-03-23 16:33:07,572 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,573 - INFO - load_nested_data - Processing income statement for META.
+2025-03-23 16:33:07,573 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,593 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,598 - ERROR - insert_financial_data - No company found with ticker symbol: META
+2025-03-23 16:33:07,598 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,598 - INFO - load_nested_data - Finished processing income statement. Total rows inserted: 0. Failed companies: []
+2025-03-23 16:33:07,598 - INFO - load_nested_data - Processing cash flow for AAPL.
+2025-03-23 16:33:07,599 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,625 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,629 - ERROR - insert_financial_data - No company found with ticker symbol: AAPL
+2025-03-23 16:33:07,630 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,630 - INFO - load_nested_data - Processing cash flow for MSFT.
+2025-03-23 16:33:07,630 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,651 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,653 - ERROR - insert_financial_data - No company found with ticker symbol: MSFT
+2025-03-23 16:33:07,653 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,653 - INFO - load_nested_data - Processing cash flow for META.
+2025-03-23 16:33:07,653 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,672 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,674 - ERROR - insert_financial_data - No company found with ticker symbol: META
+2025-03-23 16:33:07,675 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,675 - INFO - load_nested_data - Finished processing cash flow. Total rows inserted: 0. Failed companies: []
+2025-03-23 16:33:07,675 - INFO - load_nested_data - Processing company information for AAPL.
+2025-03-23 16:33:07,676 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,699 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,828 - INFO - load_company_info - AAPL info data inserted successfully. Total rows inserted: 1
+2025-03-23 16:33:07,829 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,829 - INFO - load_nested_data - Processing company information for MSFT.
+2025-03-23 16:33:07,830 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,863 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,870 - INFO - load_company_info - MSFT info data inserted successfully. Total rows inserted: 1
+2025-03-23 16:33:07,870 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,871 - INFO - load_nested_data - Processing company information for META.
+2025-03-23 16:33:07,871 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:33:07,890 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:33:07,895 - INFO - load_company_info - META info data inserted successfully. Total rows inserted: 1
+2025-03-23 16:33:07,896 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:33:07,896 - INFO - load_nested_data - Finished processing company information. Total rows inserted: 3. Failed companies: []
+2025-03-23 16:33:07,896 - INFO - main - Data loading complete.
+2025-03-23 16:33:07,896 - INFO - main - Pipeline execution completed successfully.
+2025-03-23 16:41:23,285 - INFO - main - Setting up the database...
+2025-03-23 16:41:23,286 - INFO - get_db_connection - Attempting to create a database connection...
+2025-03-23 16:41:23,301 - INFO - get_db_connection - Database connection established successfully.
+2025-03-23 16:41:23,301 - INFO - create_tables - Creating tables...
+2025-03-23 16:41:23,302 - INFO - create_tables - Schema created successfully!
+2025-03-23 16:41:23,303 - INFO - get_db_connection - Database connection closed.
+2025-03-23 16:41:23,303 - INFO - main - Database setup complete.
+2025-03-23 16:41:41,777 - INFO - main - Starting data ingestion...
+2025-03-23 16:41:41,778 - INFO - get_data - Fetching data for function 'daily' and symbol(s): ['AAPL', 'MSFT']
+2025-03-23 16:41:43,003 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_daily.json
+2025-03-23 16:41:44,189 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_daily.json
+2025-03-23 16:41:44,189 - INFO - get_data - Fetching data for function 'balance' and symbol(s): ['AAPL', 'MSFT']
+2025-03-23 16:41:44,881 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_balance.json
+2025-03-23 16:41:45,371 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_balance.json
+2025-03-23 16:41:45,372 - INFO - get_data - Fetching data for function 'income' and symbol(s): ['AAPL', 'MSFT']
+2025-03-23 16:41:46,115 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_income.json
+2025-03-23 16:41:46,769 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_income.json
+2025-03-23 16:41:46,769 - INFO - get_data - Fetching data for function 'cash' and symbol(s): ['AAPL', 'MSFT']
+2025-03-23 16:41:47,478 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_cash.json
+2025-03-23 16:41:48,200 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_cash.json
+2025-03-23 16:41:48,200 - INFO - get_data - Fetching data for function 'info' and symbol(s): ['AAPL', 'MSFT']
+2025-03-23 16:41:48,416 - INFO - get_data - Data for symbol 'AAPL' saved to data/raw_data/AAPL_info.json
+2025-03-23 16:41:48,669 - INFO - get_data - Data for symbol 'MSFT' saved to data/raw_data/MSFT_info.json
+2025-03-23 16:41:48,670 - INFO - main - Data ingestion complete.
+2025-03-23 16:41:48,670 - INFO - main - Starting data transformation...
+2025-03-23 16:48:31,376 - INFO - main - Data transformation complete.
+2025-03-23 16:48:33,781 - INFO - main - Starting data loading...

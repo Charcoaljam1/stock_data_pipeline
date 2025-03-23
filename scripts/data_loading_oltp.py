@@ -4,7 +4,7 @@ from scripts.logger import logger
 import pandas as pd
 
 
-def load_data(data, type, symbol=None, nested=False):
+def load_data(data: pd.DataFrame, type: str, symbol=None, nested=False):
     """
     Loads data of a specified type for a given symbol into the database.
 

@@ -3,7 +3,7 @@ import json
 from scripts.logger import logger
 from config.config import ALPHA_VANTAGE_API_KEY
 
-def get_data(symbol, function):
+def get_data(symbol: list | str, function: str):
     """
         Fetch data from the Alpha Vantage API.
         

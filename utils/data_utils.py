@@ -1,6 +1,6 @@
 import pandas as pd
 
-def _clean_daily(df):
+def clean_daily(df):
     """
     Cleans a daily stock market DataFrame by:
     - Dropping unnecessary columns ('2. high', '3. low').
@@ -31,7 +31,7 @@ def _clean_daily(df):
 
     return df
 
-def _clean_balance(df):
+def clean_balance(df):
     """
     Cleans a balance sheet DataFrame by:
     - Renaming columns to more readable names.
@@ -113,7 +113,7 @@ def _clean_balance(df):
 
     return df
 
-def _clean_income(df):
+def clean_income(df):
     """
     Cleans an income statement DataFrame by:
     - Renaming columns to more readable names.
@@ -189,7 +189,7 @@ def _clean_income(df):
     return df 
 
 
-def _clean_cash(df):
+def clean_cash(df):
     """
     Cleans an cash flow statement DataFrame by:
     - Renaming columns to more readable names.
@@ -265,7 +265,7 @@ def _clean_cash(df):
 
     return df
 
-def _clean_info(df):
+def clean_info(df):
     """
     Cleans company overview data.
     

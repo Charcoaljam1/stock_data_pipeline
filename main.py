@@ -9,17 +9,16 @@ def main():
     try:
         # Step 1: Set up the database
         logger.info("Setting up the database...")
-        # create_tables()
+        create_tables()
         logger.info("Database setup complete.")
 
         # Step 2: Define the symbols and functions based on user input
         try:
             symbols = get_stock_symbols()
-            print("Valid stock symbols:", symbols)
         except ValueError as e:
             print(e)
         
-        functions = ['daily', 'balance', 'income', 'cash', 'info'] 
+        functions = ['info', 'daily', 'balance', 'income', 'cash'] 
         nested = len(symbols) > 1
 
         # Step 3: Data Ingestion
