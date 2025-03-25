@@ -3,6 +3,7 @@ import json
 import logging
 import traceback
 import requests
+from tenacity import RetryError
 import time
 from functools import wraps
 from logging.handlers import RotatingFileHandler
@@ -65,6 +66,18 @@ def log_info(log_level='error', log_params=True, re_raise=True):
 
     log_level = level_map.get(log_level.lower(), logging.INFO)
     
+    status_code_to_message = {
+    503: "Service unavailable. Please try again later.",
+    429: "Rate limit exceeded. Please wait for a few seconds before retrying.",
+    401: "Invalid API key. Please check the 'config/config.py' file.",
+    404: "Resource not found. Please check the function and symbol.",
+    400: "Bad request. Please check the function and symbol.",
+    403: "Forbidden. Please check the API key and URL.",
+    500: "Internal server error. Please try again later.",
+    502: "Bad gateway. Please try again later.",
+    504: "Gateway timeout. Please try again later."
+    }
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -116,29 +129,11 @@ def log_info(log_level='error', log_params=True, re_raise=True):
                     "error_message": f"HTTP Error"
                 }
                 
-                if e.response:
+                if e.response.status_code in status_code_to_message:
+                    error_data["error_message"] += f" ({status_code_to_message[e.response.status_code]})"
+                elif e.response:
                     error_data["error_message"] += f": {e.response.status_code}. {e.response.reason}" 
-
-                if e.response.status_code == 503:
-                    error_data["error_message"] += f" (Service unavailable. Please try again later.)"
-                elif e.response.status_code == 429:
-                    error_data["error_message"] += f" (Rate limit exceeded. Please wait for a few seconds before retrying.)"  
-                elif e.response.status_code == 401:
-                    error_data["error_message"] += f" (Invalid API key. Please check the 'config/config.py' file.)"
-                elif e.response.status_code == 404:
-                    error_data["error_message"] += f" (Resource not found. Please check the function and symbol.)"
-                elif e.response.status_code == 400:
-                    error_data["error_message"] += f" (Bad request. Please check the function and symbol.)"
-                elif e.response.status_code == 403:
-                    error_data["error_message"] += f" (Forbidden. Please check the API key and URL.)"
-                elif e.response.status_code == 500:
-                    error_data["error_message"] += f" (Internal server error. Please try again later.)"
-                elif e.response.status_code == 502:
-                    error_data["error_message"] += f" (Bad gateway. Please try again later.)"
-                elif e.response.status_code == 504:
-                    error_data["error_message"] += f" (Gateway timeout. Please try again later.)"
-            
-                
+                               
                 if log_params:
                     error_data.update({"args": sanitized_args, "kwargs": sanitized_kwargs})
 
@@ -163,6 +158,25 @@ def log_info(log_level='error', log_params=True, re_raise=True):
 
                 if re_raise:
                     raise  # Re-raise exception
+            except RetryError as e:
+                original_exception = e.last_attempt.exception()
+
+                error_data = {
+                    "status": "critical",
+                    "function": actual_func_name,
+                    "error_type": type(e).__name__,
+                    "error_message": f"Request failed: {original_exception}"
+                }
+
+                if isinstance(original_exception, requests.exceptions.HTTPError):
+                    error_data["error_message"] = f"HTTPError: {original_exception}"
+               
+                if log_params:
+                    error_data.update({"args": sanitized_args, "kwargs": sanitized_kwargs})
+
+                logger.log(level_map['critical'], json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
+                logger.debug(traceback.format_exc())
+                raise original_exception
             except Exception as e:
                 error_data = {
                     "status": "error",

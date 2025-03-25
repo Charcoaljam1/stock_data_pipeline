@@ -2,11 +2,18 @@
     "Meta Data": {
         "1. Information": "Daily Prices (open, high, low, close) and Volumes",
         "2. Symbol": "META",
-        "3. Last Refreshed": "2025-03-21",
+        "3. Last Refreshed": "2025-03-24",
         "4. Output Size": "Full size",
         "5. Time Zone": "US/Eastern"
     },
     "Time Series (Daily)": {
+        "2025-03-24": {
+            "1. open": "614.9700",
+            "2. high": "622.5400",
+            "3. low": "612.2001",
+            "4. close": "618.8500",
+            "5. volume": "15741274"
+        },
         "2025-03-21": {
             "1. open": "583.4250",
             "2. high": "597.5450",

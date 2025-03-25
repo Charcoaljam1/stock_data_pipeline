@@ -51,8 +51,12 @@ def input_validation(function: str, symbol: str) -> dict:
     
     if isinstance(symbol, list):
         for tick in symbol:
+            if len(tick) > 5:
+                return {"error": True, "message": f"Invalid symbol '{tick}'. Maximum length is 5 characters."}
             if not tick.isalpha():
                 return {"error": True, "message": f"Invalid symbol '{tick}'. Only alphabetic characters are allowed."}
+    elif isinstance(symbol, str) and len(symbol) > 5:
+        return {"error": True, "message": f"Invalid symbol '{symbol}'. Maximum length is 5 characters."}
     elif not isinstance(symbol, str) or not symbol.isalpha():
         return {"error": True, "message": f"Invalid symbol '{symbol}'. Only alphabetic characters are allowed."}
     
@@ -76,7 +80,7 @@ def build_parameters(symbol: str, function: str) -> dict:
 
 def is_retryable_exception(exception):
     """Check if the exception is retryable."""
-    if isinstance(exception, requests.exceptions.HTTPError) and exception.response.status_code in [429, 500, 503]:
+    if isinstance(exception, requests.exceptions.HTTPError) and getattr(exception.response, "status_code", None) in [429, 500, 503]:
         return True  
     if isinstance(exception, requests.exceptions.RequestException):
         return True 
