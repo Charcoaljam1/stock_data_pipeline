@@ -1,9 +1,10 @@
 import psycopg2
 from psycopg2 import sql
 from config.config import DB_CONFIG
-from scripts.logger import logger
+from scripts.logger import logger, log_info
 from scripts.database_connection import get_db_connection
 
+@log_info('error')
 def create_tables():
     """Create tables in the PostgreSQL database."""
 

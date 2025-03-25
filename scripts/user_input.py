@@ -1,3 +1,7 @@
+from logger import log_info
+import warnings
+
+@log_info('info')
 def get_stock_symbols():
     """Prompt the user to enter stock symbol(s) and validate the input."""
 
@@ -8,11 +12,13 @@ def get_stock_symbols():
 
         # Ensure input is not empty
         if not user_input:
+            warnings.warn(f"Invalid input: Stock symbol(s) cannot be empty. Attempts left: {attempts - attempt - 1}")
             print(f"Invalid input: Stock symbol(s) cannot be empty. Attempts left: {attempts - attempt - 1}")
             continue  # Retry
         
         # Ensure input contains only valid stock symbol characters (letters, commas, and spaces)
         if not all(char.isalpha() or char in {',', ' '} for char in user_input):
+            warnings.warn(f"Invalid input: Stock symbols must contain only letters and commas. Attempts left: {attempts - attempt - 1}")
             print(f"Invalid input: Stock symbols must contain only letters and commas. Attempts left: {attempts - attempt - 1}")
             continue  # Retry
         

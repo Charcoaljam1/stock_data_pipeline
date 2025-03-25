@@ -1,8 +1,9 @@
 import psycopg2
 from config.config import DB_CONFIG
-from scripts.logger import logger
+from scripts.logger import log_info, logger
 from contextlib import contextmanager
 
+@log_info('error')
 @contextmanager
 def get_db_connection():
     """

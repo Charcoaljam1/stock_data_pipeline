@@ -1,124 +1,108 @@
 import requests
 import json
-from scripts.logger import logger
+from scripts.logger import log_info
+import os
 from config.config import ALPHA_VANTAGE_API_KEY
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
+
+
+
+function_mapping = {
+"daily": "TIME_SERIES_DAILY",
+"income": "INCOME_STATEMENT",
+"balance": "BALANCE_SHEET",
+"cash": "CASH_FLOW",
+"eps": "EARNINGS",
+"info": "OVERVIEW"  
+}
+
+url = f"https://www.alphavantage.co/query"  
+
+@log_info('error')
 def get_data(symbol: list | str, function: str):
-    """
-        Fetch data from the Alpha Vantage API.
-        
-        Args:
-            function (str): The type of data to request. Options are:
-                            - "daily"
-                            - "income"
-                            - "balance"
-                            - "cash"
-                            - "eps"
-                            - "info"
-        symbol (str or list): The ticker symbol(s) of the stock(s) to fetch data for. Can be a single symbol as a string or a list of symbols.
+    DATA_DIR = "data/raw_data"
+
+    validation_result = input_validation(function, symbol)
+    if validation_result["error"]:
+        raise ValueError(validation_result["message"])
+    else:
+        print("Validation passed!")
     
-        Returns:
-            dict: The JSON response from the Alpha Vantage API if the request is successful.
-            str: Error message if the request fails or invalid function is provided.
-        """
-    # Define the base URL for the API
-    url = f"https://www.alphavantage.co/query"
+    results = {}
+    symbols = symbol if isinstance(symbol, list) else [symbol]
+
+    for tick in symbols:
+        params = build_parameters(tick, function)
+        response = fetch_api_response(url, params)
+        data = response
+        file_path = os.path.join(DATA_DIR, f"{tick}_{function}.json")
+        save_data(file_path, data)
+        results[tick] = data
+    return results if isinstance(symbol, list) else results[symbol]
+
+
+@log_info('error', log_params=True)
+def input_validation(function: str, symbol: str) -> dict:
+    """Validates API key, function, and symbol."""
 
     if not ALPHA_VANTAGE_API_KEY:
-        logger.error("API key is missing. Please check the 'config.py' file.")
-        raise ValueError("API key is missing. Please check the 'config.py' file.")
-
+        return {"error": True, "message": "API key is missing. Please check the 'config/config.py' file."}
     
-    # Map the functions to API parameters
-    function_mapping = {
-        "daily": "TIME_SERIES_DAILY",
-        "income": "INCOME_STATEMENT",
-        "balance": "BALANCE_SHEET",
-        "cash": "CASH_FLOW",
-        "eps": "EARNINGS",
-        "info": "OVERVIEW"  
-    }
-
-    # Check if the function is valid
-    if function not in function_mapping:
-        logger.error(f"Invalid function '{function}'. Valid options are: {', '.join(function_mapping.keys())}.")
-        raise ValueError(f"Invalid function '{function}'. Valid options are: {', '.join(function_mapping.keys())}.")
-
-    logger.info(f"Fetching data for function '{function}' and symbol(s): {symbol}")
-
-    # To handle a list of symbols
     if isinstance(symbol, list):
-        # Store the data for each symbol
-        results = {}
         for tick in symbol:
-            parameters = {
-                "function": function_mapping[function],
-                "symbol": tick,
-                "apikey": ALPHA_VANTAGE_API_KEY
-            }
-            
-            # Add additional parameters for specific functions
-            if function == "daily":
-                parameters.update({
-                    "datatype": "json",
-                    "outputsize": "full"
-                })
-        
-            # Make the API request
-            try:
-                response = requests.get(url, params=parameters)
-                response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Failed to fetch data for symbol '{tick}'. Error: {e}")
-                results[tick] = f"Failed to fetch data. Error: {e}"
-                continue
-        
-            # Handle the API response
-            if response.status_code == 200:
-                results[tick] = response.json()
-                file_path = f"data/raw_data/{tick}_{function}.json"
-                with open(file_path, "w") as raw_file:
-                    json.dump(results[tick], raw_file, indent=4)
-                logger.info(f"Data for symbol '{tick}' saved to {file_path}")
-            else:
-                logger.error(f"Failed to fetch data for symbol '{tick}'. Status code: {response.status_code}. Reason: {response.reason}")
-                results[tick] = f"Failed to fetch data. Status code: {response.status_code}. Reason: {response.reason}"
-
-        return results  # Return all the results as a dictionary
-
-    # Handle a single symbol
-    else: 
-        # Set up the parameters for the API request
-        parameters = {
-            "function": function_mapping[function],
-            "symbol": symbol,
-            "apikey": ALPHA_VANTAGE_API_KEY
-        }
+            if not tick.isalpha():
+                return {"error": True, "message": f"Invalid symbol '{tick}'. Only alphabetic characters are allowed."}
+    elif not isinstance(symbol, str) or not symbol.isalpha():
+        return {"error": True, "message": f"Invalid symbol '{symbol}'. Only alphabetic characters are allowed."}
     
-        # Add additional parameters for specific functions
-        if function == "daily":
-            parameters.update({
-                "datatype": "json",
-                "outputsize": "full"
-            })
-    
-        # Make the API request
-        try:
-            response = requests.get(url, params=parameters)
-            response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to fetch data for symbol '{symbol}'. Error: {e}")
-            raise RuntimeError(f"Failed to fetch data for symbol '{symbol}'. Error: {e}")
+    if function not in function_mapping:
+        return {"error": True, "message": f"Invalid function '{function}'. Valid options are: {', '.join(function_mapping.keys())}."}
+
+    return {"error": False, "message": "Validation successful."}
+
+
+@log_info('error')
+def build_parameters(symbol: str, function: str) -> dict:
+    params = {
+        "function": function_mapping[function],
+        "symbol": symbol,
+        "apikey": ALPHA_VANTAGE_API_KEY
+    }
+    if function == "daily":
+        params.update({"datatype": "json", "outputsize": "full"})
+    return params
+
+
+def is_retryable_exception(exception):
+    """Check if the exception is retryable."""
+    if isinstance(exception, requests.exceptions.HTTPError) and exception.response.status_code in [429, 500, 503]:
+        return True  
+    if isinstance(exception, requests.exceptions.RequestException):
+        return True 
+    return False
+
+
+@log_info('critical', log_params=True)
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception(is_retryable_exception),
+)
+def fetch_api_response(url: str, params: dict) -> dict:
+    response = requests.get(url, params=params)
+    response.raise_for_status() 
+    return response.json()
 
     
-        # Handle the API response
-        if response.status_code == 200:
-            data = response.json()
-            file_path = f"data/raw_data/{symbol}_{function}.json"
-            with open(file_path, "w") as raw_file:
-                json.dump(data, raw_file, indent=4)
-            logger.info(f"Data for symbol '{symbol}' saved to {file_path}")
-            return data
-        else:
-            logger.error(f"Failed to fetch data for symbol '{symbol}'. Status code: {response.status_code}. Reason: {response.reason}")
-            raise RuntimeError(f"Failed to fetch data for symbol '{symbol}'. Status code: {response.status_code}. Reason: {response.reason}")
+
+@log_info('error', log_params=True)
+def save_data(file_path: str, data: dict):
+    """Saves data to a JSON file."""
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "w") as raw_file:
+        json.dump(data, raw_file, indent=4)
+
+    
+
+

@@ -1,9 +1,10 @@
 import psycopg2
+import warnings
 from scripts.database_connection import get_db_connection
-from scripts.logger import logger
+from scripts.logger import log_info
 import pandas as pd
 
-
+@log_info('critical')
 def load_data(data: pd.DataFrame, type: str, symbol=None, nested=False):
     """
     Loads data of a specified type for a given symbol into the database.
@@ -45,21 +46,16 @@ def load_data(data: pd.DataFrame, type: str, symbol=None, nested=False):
     }
 
     if type not in loading_functions:
-        logger.error(f"Invalid data type: {type}")
-        return 0
-    
-    try:
-        if nested:
-            return(load_nested_data(data, type))
-        else:
-            return(loading_functions[type](data, symbol))
-    except Exception as e:
-        logger.error(f"Error loading {type} data for {symbol}: {e}")
-        return 0
+        raise ValueError(f"Invalid data type: '{type}' is not a supported data type.")
+     
+    if nested:
+        return(load_nested_data(data, type))
+    else:
+        return(loading_functions[type](data, symbol))
     
 
 
-
+@log_info('error')
 def load_simple_stock(data: pd.DataFrame, symbol: str, batch_size: int = 500) -> int:
     """
     Load stock data into the database for a given company symbol.
@@ -73,11 +69,10 @@ def load_simple_stock(data: pd.DataFrame, symbol: str, batch_size: int = 500) ->
     """
     # Validate inputs
     if not isinstance(data, pd.DataFrame):
-        logger.error("Invalid data type: 'data' must be a pandas DataFrame.")
-        return 0
+        raise ValueError("Invalid data type: 'data' must be a pandas DataFrame.")
+      
     if not isinstance(symbol, str):
-        logger.error("Invalid data type: 'symbol' must be a string.")
-        return 0
+        raise ValueError("Invalid data type: 'symbol' must be a string.")
     
     insert_query = '''
     INSERT INTO stocks (company_id, date, open_price,close_price,volume)
@@ -85,49 +80,46 @@ def load_simple_stock(data: pd.DataFrame, symbol: str, batch_size: int = 500) ->
     ON CONFLICT DO NOTHING;
     '''
     conn = None
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                # Fetch company_id
-                cur.execute('''SELECT company_id FROM companies WHERE ticker_symbol = %s''', (symbol,))
-                result = cur.fetchone()
-                if not result:
-                    logger.error(f"No company found with ticker symbol: {symbol}")
-                    return 0
-                company_id = result[0]
+  
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            # Fetch company_id
+            cur.execute('''SELECT company_id FROM companies WHERE ticker_symbol = %s''', (symbol,))
+            result = cur.fetchone()
+            if not result:
+                raise ValueError(f"No company found with ticker symbol: {symbol}")
+            company_id = result[0]
 
-                # Prepare data for insertion
-                values = [(company_id, *row) for row in data.itertuples(index=True, name=None)]
-     
-                # Batch insert stock data
-                batch = []
-                total_rows_inserted = 0
+            # Prepare data for insertion
+            values = [(company_id, *row) for row in data.itertuples(index=True, name=None)]
+    
+            # Batch insert stock data
+            batch = []
+            total_rows_inserted = 0
 
-                for value in values:
-                    batch.append(value)
-                    if len(batch) == batch_size:
-                        cur.executemany(insert_query, batch)
-                        conn.commit()
-                        total_rows_inserted += len(batch)
-                        batch = []
-
-                # Insert remaining rows
-                if batch:
+            for value in values:
+                batch.append(value)
+                if len(batch) == batch_size:
                     cur.executemany(insert_query, batch)
                     conn.commit()
                     total_rows_inserted += len(batch)
+                    batch = []
 
-                message = f"{symbol} stock data inserted successfully. Total rows inserted: {total_rows_inserted}"
-                logger.info(message)
-                print(message)
-                return total_rows_inserted
+            # Insert remaining rows
+            if batch:
+                cur.executemany(insert_query, batch)
+                conn.commit()
+                total_rows_inserted += len(batch)
+
+            message = f"{symbol} stock data inserted successfully. Total rows inserted: {total_rows_inserted}"
+            
+            print(message)
+            return {'info': True, 'message': message}
                 
-    except Exception as e:
-        logger.error(f"Error occurred: {e}")
-        return 0
+
     
 
-
+@log_info('error')
 def load_nested_stock_data(nested_data: dict):
     """
     Processes and loads stock data for multiple companies stored in a dictionary.
@@ -143,24 +135,17 @@ def load_nested_stock_data(nested_data: dict):
 
     for symbol, df in nested_data.items():
         if not isinstance(df, pd.DataFrame):
-            message = f"Skipping {symbol}: Value is not a valid DataFrame."
-            logger.warning(message)
-            print(message)
+            warnings.warn(f"Skipping {symbol}: Value is not a valid DataFrame.")
             continue  # Skip invalid data
             
-        try:
-            message = f"Processing stock data for {symbol}."
-            logger.info(message)
-            print(message)
-            load_simple_stock(df, symbol)
-        except Exception as e:
-            message = f"Error processing stock data for {symbol}: {e}"
-            logger.error(message)
-            print(message)
+       
+        warnings.warn("Processing stock data for {symbol}.")
+        load_simple_stock(df, symbol)
 
 
 
 
+@log_info('error')
 def load_company_info(data: pd.DataFrame, symbol: str) -> int:
     """
     Load company information into the companies table.
@@ -175,33 +160,27 @@ def load_company_info(data: pd.DataFrame, symbol: str) -> int:
     required_columns = ['name', 'total_shares', 'ticker_symbol', 'exchange', 'currency', 'country', 'sector']
 
     if not input_validation(data, symbol, required_columns):
-        return 0
+        raise ValueError("Invalid input data for loading company information.")
 
     insert_query = '''
     INSERT INTO companies (name, total_shares, ticker_symbol, exchange, currency, country, sector)
     VALUES (%s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT DO NOTHING;
     '''
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-               # Prepare data for insertion
-                values = [(row) for row in data[required_columns].itertuples(index=False, name=None)]
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            # Prepare data for insertion
+            values = [(row) for row in data[required_columns].itertuples(index=False, name=None)]
 
-                # Insert data
-                cur.executemany(insert_query, values)
-                conn.commit()
-                total_rows_inserted = cur.rowcount
+            # Insert data
+            cur.executemany(insert_query, values)
+            conn.commit()
+            total_rows_inserted = cur.rowcount
 
-                logger.info(f"{symbol} info data inserted successfully. Total rows inserted: {total_rows_inserted}")
-                return total_rows_inserted
+            message = f"{symbol} info data inserted successfully. Total rows inserted: {total_rows_inserted}"
+            return {'info': True, 'message': message}
 
-    except Exception as e:
-        logger.error(f"Error occurred while inserting {symbol} info data: {e}")
-        return 0
-    return total_rows_inserted
-    
-
+@log_info('error')
 def load_nested_data(nested_data: dict, type: str) -> int:
     """
     Processes and loads financial data for multiple companies stored in a dictionary.
@@ -230,23 +209,18 @@ def load_nested_data(nested_data: dict, type: str) -> int:
 
     for symbol, df in nested_data.items():
         if not isinstance(df, pd.DataFrame):
-            logger.warning(f"Skipping {symbol}: Value is not a valid DataFrame.")
+            warnings.warn(f"Skipping {symbol}: Value is not a valid DataFrame.")
             failed_companies.append(symbol)
             continue  # Skip invalid data
 
-        try:
-            logger.info(f"Processing {data_type} for {symbol}.")
-            rows_inserted = load_data(df, type, symbol)
-            total_rows_inserted += rows_inserted
-        except Exception as e:
-            logger.error(f"Error processing {data_type} for {symbol}: {e}")
-            failed_companies.append(symbol)
+       
+        print(f"Processing {data_type} for {symbol}.")
+        rows_inserted = load_data(df, type, symbol)
+        total_rows_inserted += rows_inserted
+    return {'info': True, 'message': f"Finished processing {data_type}. Total rows inserted: {total_rows_inserted}. "
+                f"Failed companies: {failed_companies}"}
 
-    logger.info(f"Finished processing {data_type}. Total rows inserted: {total_rows_inserted}. "
-                f"Failed companies: {failed_companies}")
-    return total_rows_inserted
-
-
+@log_info('error')
 def load_cash_data(data: pd.DataFrame, symbol: str) -> int:
     """
     Loads cash flow data into the cash_flows table.
@@ -264,7 +238,7 @@ def load_cash_data(data: pd.DataFrame, symbol: str) -> int:
                         'dividend_payout', 'debt_repayments', 'free_cashflow']
     
     if not input_validation(data, symbol, required_columns):
-        return 0
+        raise ValueError("Invalid input data for loading cash flow data.")
 
     insert_query = '''
     INSERT INTO cash_flows (company_id, date, operating_cash_flow, capital_expenditures,
@@ -274,9 +248,9 @@ def load_cash_data(data: pd.DataFrame, symbol: str) -> int:
     ON CONFLICT (company_id, date) DO NOTHING;
     '''
     total_rows_inserted = insert_financial_data(data, 'cash', symbol, required_columns, insert_query)
-    return total_rows_inserted
+    return {'info': True, 'message': f"Finished processing {symbol}. Total rows inserted: {total_rows_inserted}."}
 
-
+@log_info('error')
 def load_balance_data(data: pd.DataFrame, symbol: str) -> int:
     """
     Loads balance sheet data into the balance_sheets table.
@@ -300,7 +274,7 @@ def load_balance_data(data: pd.DataFrame, symbol: str) -> int:
     
     # Validate inputs
     if not input_validation(data, symbol, required_columns):
-        return 0
+        raise ValueError("Invalid input data for loading balance sheet data.")
     
 
     insert_query = '''
@@ -312,8 +286,10 @@ def load_balance_data(data: pd.DataFrame, symbol: str) -> int:
     ON CONFLICT (company_id, date) DO NOTHING;
     '''
     total_rows_inserted = insert_financial_data(data, 'balance', symbol, required_columns, insert_query)
-    return total_rows_inserted
+    return {'info': True, 'message': f"Finished processing {symbol}. Total rows inserted: {total_rows_inserted}."}
 
+
+@log_info('error')
 def load_income_data(data: pd.DataFrame, symbol: str) -> int:
     """
     Loads balance income data into the income_statements table.
@@ -334,7 +310,7 @@ def load_income_data(data: pd.DataFrame, symbol: str) -> int:
     
     # Validate inputs
     if not input_validation(data, symbol, required_columns):
-        return 0
+        raise ValueError("Invalid input data for loading income statement data.")
     
     insert_query = '''
     INSERT INTO income_statements (company_id, date, revenue, gross_profit,
@@ -344,10 +320,10 @@ def load_income_data(data: pd.DataFrame, symbol: str) -> int:
     ON CONFLICT (company_id, date) DO NOTHING;
     '''
     total_rows_inserted = insert_financial_data(data, 'income', symbol, required_columns, insert_query)
-    return total_rows_inserted
+    return {'info': True, 'message': f"Finished processing {symbol}. Total rows inserted: {total_rows_inserted}."}
 
 
-
+@log_info('error')
 def input_validation (data: pd.DataFrame, symbol: str, required_columns: list) -> bool:
     """
     Validates the input data for loading into the database.
@@ -361,18 +337,19 @@ def input_validation (data: pd.DataFrame, symbol: str, required_columns: list) -
         bool: True if the input is valid, False otherwise.
     """
     if not isinstance(data, pd.DataFrame):
-        logger.error("Invalid data type: 'data' must be a pandas DataFrame.")
+        warnings.warn("Invalid data type: 'data' must be a pandas DataFrame.")
         return False
     if not isinstance(symbol, str):
-        logger.error("Invalid data type: 'symbol' must be a string.")
+        warnings.warn("Invalid data type: 'symbol' must be a string.")
         return False
     missing_columns = [col for col in required_columns if col not in data.columns]
     if missing_columns:
-        logger.error(f"Missing required columns in the DataFrame: {missing_columns}")
+        warnings.warn(f"Missing required columns in the DataFrame: {missing_columns}")
         return False
     return True
 
 
+@log_info('error')
 def insert_financial_data (data: pd.DataFrame, type: str, symbol: str, required_columns: list, insert_query: str) -> int:
     """
         Inserts financial data into the database for a specific company based on its ticker symbol.
@@ -402,34 +379,25 @@ def insert_financial_data (data: pd.DataFrame, type: str, symbol: str, required_
     }
     data_type = function_mapping.get(type, f"'{type}' data")
 
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                # Fetch company_id
-                cur.execute('''SELECT company_id FROM companies WHERE ticker_symbol = %s''', (symbol,))
-                result = cur.fetchone()
-                if not result:
-                    message = f"No company found with ticker symbol: {symbol}"
-                    logger.error(message)
-                    print(message)
-                    return 0
-                company_id = result[0]
+    
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            # Fetch company_id
+            cur.execute('''SELECT company_id FROM companies WHERE ticker_symbol = %s''', (symbol,))
+            result = cur.fetchone()
+            if not result:
+                raise ValueError(f"No company found with ticker symbol: {symbol}")
+            company_id = result[0]
 
-                # Prepare data for insertion
-                values = [(company_id, *row) for row in data[required_columns].itertuples(index=False, name=None)]
+            # Prepare data for insertion
+            values = [(company_id, *row) for row in data[required_columns].itertuples(index=False, name=None)]
 
-                # Insert data
-                cur.executemany(insert_query, values)
-                conn.commit()
-                total_rows_inserted = cur.rowcount
+            # Insert data
+            cur.executemany(insert_query, values)
+            conn.commit()
+            total_rows_inserted = cur.rowcount
 
-                message = f"{symbol} {data_type} data inserted successfully. Total rows inserted: {total_rows_inserted}"
-                logger.info(message)
-                print(message)
-                return total_rows_inserted
+            message = f"{symbol} {data_type} data inserted successfully. Total rows inserted: {total_rows_inserted}"
+            print(message)
+            return {'info': True, 'message': message}
 
-    except Exception as e:
-        message = f"Error occurred while inserting {symbol} {data_type} data: {e}"
-        logger.error(message)
-        print(message)
-        return 0
