@@ -47,24 +47,36 @@ def sanitize_args(args, kwargs, sensitive_keys=None):
 
     return sanitized_args, sanitized_kwargs
 
+def log_info(func):
+    """Decorator to log function execution start and completion."""
+    @wraps(func)  # Preserves function metadata
+    def wrapper(*args, **kwargs):
+        logger = configure_logger(func.__module__)
+        actual_func_name = func.__name__
+        sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
 
-def log_info(log_level='error', log_params=True, re_raise=True):
-    """
-    Decorator for logging function calls and exceptions.
+        info_data = {
+            "status": "starting",
+            "function": actual_func_name,
+            "args": sanitized_args,
+            "kwargs": sanitized_kwargs,
+            "_info_message": f"{actual_func_name} function is starting"
+        }
+        logger.info(json.dumps(info_data, indent=4), extra={"custom_funcName": actual_func_name})
 
-    Parameters:
-    - log_level: Logging level (e.g., ERROR, WARNING, CRITICAL)
-    - log_params: Whether to log function arguments
-    - re_raise: Whether to re-raise the exception after logging
-    """
-    level_map = {
-        "info": logging.INFO,
-        "warning": logging.WARNING,
-        "error": logging.ERROR,
-        "critical": logging.CRITICAL,
-    }
+        result = func(*args, **kwargs)  # Execute the function
 
-    log_level = level_map.get(log_level.lower(), logging.INFO)
+        info_data["status"] = "completed"
+        info_data["_info_message"] = f"{actual_func_name} function has completed"
+        logger.info(json.dumps(info_data, indent=4), extra={"custom_funcName": actual_func_name})
+
+        return result  # Preserve function output
+
+    return wrapper
+
+def handle_exceptions(func):
+    """"Decorator to handle exceptions and log them."""
+    
     
     status_code_to_message = {
     503: "Service unavailable. Please try again later.",
@@ -78,121 +90,74 @@ def log_info(log_level='error', log_params=True, re_raise=True):
     504: "Gateway timeout. Please try again later."
     }
 
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            logger = configure_logger(func.__module__)
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        logger = configure_logger(func.__module__)
 
-            start_time = time.time()
-            sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
-            actual_func_name = func.__name__
+        sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
+        actual_func_name = func.__name__
 
-            try:
-                logger.info(f"Function {actual_func_name} called",
-                 extra={"custom_funcName": actual_func_name})
-                result = func(*args, **kwargs)
+        error_data = {
+            "status": "error",
+            "function": actual_func_name,
+            "args": sanitized_args,
+            "kwargs": sanitized_kwargs,
+            "error_type": type(e).__name__,
+            "error_message":f'Timeout occured while fetching data. {str(e)}. Retrying...'
+        }
 
-                execution_time = round(time.time() - start_time, 3)
+        try:
+          return func(*args, **kwargs)
 
-                if isinstance(result, dict) and result.get("error", False):
-                    logger.warning(f"Validation failed in {actual_func_name}: {result['message']}", extra={"custom_funcName": actual_func_name})
-               
-                if isinstance(result, dict) and result.get("info", False):
-                    logger.info(f"Process completed in {actual_func_name}: {result['message']}", extra={"custom_funcName": actual_func_name})
+        except requests.exceptions.Timeout as e:
+            error_data["error_type"] = type(e).__name__
+            error_data["error_message"] = f'Timeout occured while fetching data. {str(e)}. Retrying...'
+        
+            logger.error(json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
+            logger.debug(traceback.format_exc())
 
-                logger.info(f"Function {actual_func_name} completed action in {execution_time} seconds",
-                 extra={"custom_funcName": actual_func_name})
+            raise  # Re-raise exception
+        except requests.exceptions.HTTPError as e:
+            error_data["error_type"] = type(e).__name__
+            error_data["error_message"] = f"HTTP Error"
 
-                return result
+            if e.response.status_code in status_code_to_message:
+                error_data["error_message"] += f" ({status_code_to_message[e.response.status_code]})"
+            elif e.response:
+                error_data["error_message"] += f": {e.response.status_code}. {e.response.reason}" 
+            
+            logger.error(json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
+            logger.debug(traceback.format_exc())
 
-            except requests.exceptions.Timeout as e:
-                error_data = {
-                    "status": "error",
-                    "function": actual_func_name,
-                    "error_type": type(e).__name__,
-                    "error_message": f'Timeout occured while fetching data. {str(e)}. Retrying...'
-                }
-                
-                if log_params:
-                    error_data.update({"args": sanitized_args, "kwargs": sanitized_kwargs})
+            raise  # Re-raise exception
+        except requests.exceptions.RequestException as e:
+            error_data["error_type"] = type(e).__name__
+            error_data["error_message"] = f"Request failed: {str(e)}"
 
-                logger.log(level_map['warning'], json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
-                logger.debug(traceback.format_exc())
+            logger.critical(json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
+            logger.debug(traceback.format_exc())
 
-                if re_raise:
-                    raise  # Re-raise exception
-            except requests.exceptions.HTTPError as e:
-                error_data = {
-                    "status": "warning",
-                    "function": actual_func_name,
-                    "error_type": type(e).__name__,
-                    "error_message": f"HTTP Error"
-                }
-                
-                if e.response.status_code in status_code_to_message:
-                    error_data["error_message"] += f" ({status_code_to_message[e.response.status_code]})"
-                elif e.response:
-                    error_data["error_message"] += f": {e.response.status_code}. {e.response.reason}" 
-                               
-                if log_params:
-                    error_data.update({"args": sanitized_args, "kwargs": sanitized_kwargs})
+            raise  # Re-raise exception
+        except RetryError as e:
+            original_exception = e.last_attempt.exception()
+            
+            error_data["error_type"] = type(e).__name__
+            error_data["error_message"] = f"Request failed: {original_exception}"
 
-                logger.log(level_map['error'], json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
-                logger.debug(traceback.format_exc())
+            if isinstance(original_exception, requests.exceptions.HTTPError):
+                error_data["error_message"] = f"HTTPError: {original_exception}"
 
-                if re_raise:
-                    raise  # Re-raise exception
-            except requests.exceptions.RequestException as e:
-                error_data = {
-                    "status": "critical",
-                    "function": actual_func_name,
-                    "error_type": type(e).__name__,
-                    "error_message": f"Request failed: {str(e)}"
-                }
-                
-                if log_params:
-                    error_data.update({"args": sanitized_args, "kwargs": sanitized_kwargs})
+            logger.critical(json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
+            logger.debug(traceback.format_exc())
 
-                logger.log(level_map['critical'], json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
-                logger.debug(traceback.format_exc())
+            raise  original_exception
+        except Exception as e:
+            error_data["error_type"] = type(e).__name__
+            error_data["error_message"] = str(e)
 
-                if re_raise:
-                    raise  # Re-raise exception
-            except RetryError as e:
-                original_exception = e.last_attempt.exception()
 
-                error_data = {
-                    "status": "critical",
-                    "function": actual_func_name,
-                    "error_type": type(e).__name__,
-                    "error_message": f"Request failed: {original_exception}"
-                }
+            logger.error(json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
+            logger.debug(traceback.format_exc())
 
-                if isinstance(original_exception, requests.exceptions.HTTPError):
-                    error_data["error_message"] = f"HTTPError: {original_exception}"
-               
-                if log_params:
-                    error_data.update({"args": sanitized_args, "kwargs": sanitized_kwargs})
-
-                logger.log(level_map['critical'], json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
-                logger.debug(traceback.format_exc())
-                raise original_exception
-            except Exception as e:
-                error_data = {
-                    "status": "error",
-                    "function": actual_func_name,
-                    "error_type": type(e).__name__,
-                    "error_message": str(e),
-                }
-                
-                if log_params:
-                    error_data.update({"args": sanitized_args, "kwargs": sanitized_kwargs}, extra={"custom_funcName": actual_func_name})
-
-                logger.log(log_level, json.dumps(error_data, indent=4),
-                 extra={"custom_funcName": actual_func_name})
-                logger.debug(traceback.format_exc())
-
-                if re_raise:
-                    raise  # Re-raise exception
-        return wrapper
-    return decorator
+            raise  # Re-raise exception
+    return wrapper

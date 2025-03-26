@@ -2,7 +2,7 @@ import pandas as pd
 from scripts.logger import log_info
 from utils.data_utils import clean_daily, clean_balance, clean_cash, clean_income, clean_info
 
-@log_info('error')
+@log_info()
 def clean_data(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
     """
     Cleans and processes data based on the specified type.
@@ -35,7 +35,7 @@ def clean_data(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
 
     return cleaning_functions[data_type](df)
 
-@log_info('error')
+@log_info()
 def format_data(data: pd.DataFrame,function: str,nested=False):
     """
     Format JSON data gotten from the Alpha Vantage API into a pandas DataFrame.

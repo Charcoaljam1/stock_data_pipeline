@@ -3,7 +3,7 @@ from config.config import DB_CONFIG
 from scripts.logger import log_info, logger
 from contextlib import contextmanager
 
-@log_info('error')
+@log_info()
 @contextmanager
 def get_db_connection():
     """

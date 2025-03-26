@@ -4,7 +4,7 @@ from config.config import DB_CONFIG
 from scripts.logger import logger, log_info
 from scripts.database_connection import get_db_connection
 
-@log_info('error')
+@log_info()
 def create_tables():
     """Create tables in the PostgreSQL database."""
 

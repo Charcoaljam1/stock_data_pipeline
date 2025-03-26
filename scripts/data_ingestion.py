@@ -19,7 +19,7 @@ function_mapping = {
 
 url = f"https://www.alphavantage.co/query"  
 
-@log_info('error')
+@log_info()
 def get_data(symbol: list | str, function: str):
     DATA_DIR = "data/raw_data"
 
@@ -42,7 +42,7 @@ def get_data(symbol: list | str, function: str):
     return results if isinstance(symbol, list) else results[symbol]
 
 
-@log_info('error', log_params=True)
+@log_info()
 def input_validation(function: str, symbol: str) -> dict:
     """Validates API key, function, and symbol."""
 
@@ -66,7 +66,7 @@ def input_validation(function: str, symbol: str) -> dict:
     return {"error": False, "message": "Validation successful."}
 
 
-@log_info('error')
+@log_info()
 def build_parameters(symbol: str, function: str) -> dict:
     params = {
         "function": function_mapping[function],
@@ -87,7 +87,7 @@ def is_retryable_exception(exception):
     return False
 
 
-@log_info('critical', log_params=True)
+@log_info()
 @retry(
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -100,7 +100,7 @@ def fetch_api_response(url: str, params: dict) -> dict:
 
     
 
-@log_info('error', log_params=True)
+@log_info()
 def save_data(file_path: str, data: dict):
     """Saves data to a JSON file."""
     os.makedirs(os.path.dirname(file_path), exist_ok=True)

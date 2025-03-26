@@ -5,7 +5,7 @@ from scripts.data_loading_oltp import load_data
 from scripts.database_setup import create_tables
 from scripts.logger import logger, log_info
 
-@log_info
+@log_info()
 def main():
     
     # Step 1: Set up the database
