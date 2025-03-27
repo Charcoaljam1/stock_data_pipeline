@@ -1,8 +1,32 @@
 import pandas as pd
-from scripts.logger import log_info
+from collections import defaultdict
+from scripts.logger import log_info, handle_exceptions
 from utils.data_utils import clean_daily, clean_balance, clean_cash, clean_income, clean_info
 
-@log_info()
+
+class DataCleaner:
+
+    formatting_functions = {
+        'daily': format_daily,
+        'income': format_financial,
+        'balance': format_financial,
+        'cash': format_financial,
+        'info': format_info
+        }
+    
+    def __init__(self, raw_data):
+        self.raw_data = raw_data
+        self.processed_data = defaultdict(lambda: defaultdict(dict))
+
+        def transform(self):
+            raw_data_validation(self.raw_data)
+            for symbols, data in self.raw_data.items():
+                for data_types, values in data.items():
+                    self.processed_data[symbols][data_types]=DataCleaner.formatting_functions[data_types](values,data_types)
+
+
+
+@handle_exceptions
 def clean_data(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
     """
     Cleans and processes data based on the specified type.
@@ -35,7 +59,48 @@ def clean_data(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
 
     return cleaning_functions[data_type](df)
 
-@log_info()
+def format_daily(data, data_type):
+    """Format JSON stock data gotten from the Alpha Vantage API into a pandas DataFrame."""
+
+    time_series = data.get('Time Series (Daily)', None)
+    if time_series is None:
+        raise KeyError("Expected 'Time Series (Daily)' key not found in the data")
+    time_series_df = pd.DataFrame.from_dict(time_series, orient='index')
+    cleaned_time_series_df = clean_data(time_series_df,data_type)
+    cleaned_time_series_df.to_csv(f"data/processed_data/{data['Meta Data']['2. Symbol']}_stock.csv")
+    stock_data = cleaned_time_series_df
+
+    return stock_data
+
+def format_info(data, data_type):
+    """Format JSON company gotten from the Alpha Vantage API into a pandas DataFrame."""
+
+    keys = ['Name', 'SharesOutstanding','Symbol', 'Exchange','Currency','Country','Sector']
+    info = {key: data.get(key, None) for key in keys}
+    if info is None:
+        raise KeyError(" key not found in the data")
+    info_df = pd.DataFrame([info])
+    cleaned_info_df = clean_data(info_df,data_type)
+    cleaned_info_df.to_csv(f"data/processed_data/{data.get('Symbol')}_info.csv", index=False)
+    information = cleaned_info_df
+
+    return information  
+
+def format_financial(data, data_type):
+    """Format JSON financial data gotten from the Alpha Vantage API into a pandas DataFrame."""
+
+    statement = data.get('annualReports', None)
+    if statement is None:
+        raise KeyError("'annualReports' key not found in the data")
+    statement_df = pd.DataFrame.from_dict(statement)
+    cleaned_statement_df = clean_data(statement_df,data_type)
+    cleaned_statement_df.to_csv(f"data/processed_data/{data['symbol']}_{function}_statement.csv", index=False)
+    financial_data = cleaned_statement_df        
+
+    return financial_data
+
+@handle_exceptions
+@log_info
 def format_data(data: pd.DataFrame,function: str,nested=False):
     """
     Format JSON data gotten from the Alpha Vantage API into a pandas DataFrame.

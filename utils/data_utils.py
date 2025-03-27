@@ -1,4 +1,5 @@
 import pandas as pd
+import warnings
 
 def clean_daily(df):
     """
@@ -14,10 +15,13 @@ def clean_daily(df):
     Returns:
     pd.DataFrame: Cleaned DataFrame with updated column names and data types.
     """
+    required_columns = ['1. open', '4. close', '5. volume']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        warnings.warn(f"Warning: Missing columns {missing_columns} in data")
 
-    df.drop(columns=[ '2. high', '3. low'], inplace=True)
+    df.drop(columns=[ '2. high', '3. low'], inplace=True, errors='ignore')
     df.index.name = 'Date'
-    # df.reset_index(inplace=True)
     df.index = pd.to_datetime(df.index, errors="coerce")
     
 

@@ -24,7 +24,7 @@ def test_clean_data_valid(mock_clean_functions):
     # Test for valid data types
     cleaned_df = clean_data(df, 'daily')
     assert not cleaned_df.empty  # Check that the cleaned DataFrame is not empty
-    assert set(cleaned_df.columns) == {'A'}  # Check that the cleaned data has correct columns
+    assert set(cleaned_df.columns) == {'Date'}  # Check that the cleaned data has correct columns
 
     # Test for invalid data type
     with pytest.raises(ValueError):
@@ -49,7 +49,7 @@ def test_format_data_daily(mock_clean_functions):
     # Test for non-nested daily data
     cleaned_data = format_data(data, function='daily', nested=False)
     assert not cleaned_data.empty
-    assert 'A' in cleaned_data.columns
+    assert 'Open' in cleaned_data.columns
 
     # Test for missing 'Time Series (Daily)' key
     with pytest.raises(KeyError):

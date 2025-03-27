@@ -4,9 +4,9 @@ import logging
 import traceback
 import requests
 from tenacity import RetryError
-import time
 from functools import wraps
 from logging.handlers import RotatingFileHandler
+import pandas as pd
 
 # Global logger configuration
 LOG_DIRECTORY = "logs"
@@ -101,10 +101,9 @@ def handle_exceptions(func):
             "status": "error",
             "function": actual_func_name,
             "args": sanitized_args,
-            "kwargs": sanitized_kwargs,
-            "error_type": type(e).__name__,
-            "error_message":f'Timeout occured while fetching data. {str(e)}. Retrying...'
+            "kwargs": sanitized_kwargs
         }
+        error_data["args"] = error_data["args"].to_dict() if isinstance(error_data["args"], pd.DataFrame) else error_data["args"]
 
         try:
           return func(*args, **kwargs)

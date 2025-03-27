@@ -1,10 +1,11 @@
 import psycopg2
 from config.config import DB_CONFIG
-from scripts.logger import log_info, logger
+from scripts.logger import log_info, logger, handle_exceptions
 from contextlib import contextmanager
 
-@log_info()
 @contextmanager
+@handle_exceptions
+@log_info
 def get_db_connection():
     """
     Creates a PostgreSQL database connection and ensures proper cleanup.

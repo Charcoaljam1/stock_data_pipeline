@@ -1,7 +1,8 @@
-from logger import log_info
+from logger import log_info, handle_exceptions
 import warnings
 
-@log_info('info')
+@handle_exceptions
+@log_info
 def get_stock_symbols():
     """Prompt the user to enter stock symbol(s) and validate the input."""
 

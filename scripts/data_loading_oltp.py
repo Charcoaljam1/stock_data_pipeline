@@ -1,10 +1,11 @@
 import psycopg2
 import warnings
 from scripts.database_connection import get_db_connection
-from scripts.logger import log_info
+from scripts.logger import log_info, handle_exceptions
 import pandas as pd
 
-@log_info()
+@handle_exceptions
+@log_info
 def load_data(data: pd.DataFrame, type: str, symbol=None, nested=False):
     """
     Loads data of a specified type for a given symbol into the database.
@@ -55,7 +56,8 @@ def load_data(data: pd.DataFrame, type: str, symbol=None, nested=False):
     
 
 
-@log_info()
+@handle_exceptions
+@log_info
 def load_simple_stock(data: pd.DataFrame, symbol: str, batch_size: int = 500) -> int:
     """
     Load stock data into the database for a given company symbol.
@@ -119,7 +121,8 @@ def load_simple_stock(data: pd.DataFrame, symbol: str, batch_size: int = 500) ->
 
     
 
-@log_info()
+@handle_exceptions
+@log_info
 def load_nested_stock_data(nested_data: dict):
     """
     Processes and loads stock data for multiple companies stored in a dictionary.
@@ -145,7 +148,8 @@ def load_nested_stock_data(nested_data: dict):
 
 
 
-@log_info()
+@handle_exceptions
+@log_info
 def load_company_info(data: pd.DataFrame, symbol: str) -> int:
     """
     Load company information into the companies table.
@@ -180,7 +184,8 @@ def load_company_info(data: pd.DataFrame, symbol: str) -> int:
             message = f"{symbol} info data inserted successfully. Total rows inserted: {total_rows_inserted}"
             return {'info': True, 'message': message}
 
-@log_info()
+@handle_exceptions
+@log_info
 def load_nested_data(nested_data: dict, type: str) -> int:
     """
     Processes and loads financial data for multiple companies stored in a dictionary.
@@ -220,7 +225,8 @@ def load_nested_data(nested_data: dict, type: str) -> int:
     return {'info': True, 'message': f"Finished processing {data_type}. Total rows inserted: {total_rows_inserted}. "
                 f"Failed companies: {failed_companies}"}
 
-@log_info()
+@handle_exceptions
+@log_info
 def load_cash_data(data: pd.DataFrame, symbol: str) -> int:
     """
     Loads cash flow data into the cash_flows table.
@@ -250,7 +256,8 @@ def load_cash_data(data: pd.DataFrame, symbol: str) -> int:
     total_rows_inserted = insert_financial_data(data, 'cash', symbol, required_columns, insert_query)
     return {'info': True, 'message': f"Finished processing {symbol}. Total rows inserted: {total_rows_inserted}."}
 
-@log_info()
+@handle_exceptions
+@log_info
 def load_balance_data(data: pd.DataFrame, symbol: str) -> int:
     """
     Loads balance sheet data into the balance_sheets table.
@@ -289,7 +296,8 @@ def load_balance_data(data: pd.DataFrame, symbol: str) -> int:
     return {'info': True, 'message': f"Finished processing {symbol}. Total rows inserted: {total_rows_inserted}."}
 
 
-@log_info()
+@handle_exceptions
+@log_info
 def load_income_data(data: pd.DataFrame, symbol: str) -> int:
     """
     Loads balance income data into the income_statements table.
@@ -323,7 +331,8 @@ def load_income_data(data: pd.DataFrame, symbol: str) -> int:
     return {'info': True, 'message': f"Finished processing {symbol}. Total rows inserted: {total_rows_inserted}."}
 
 
-@log_info()
+@handle_exceptions
+@log_info
 def input_validation (data: pd.DataFrame, symbol: str, required_columns: list) -> bool:
     """
     Validates the input data for loading into the database.
@@ -349,7 +358,8 @@ def input_validation (data: pd.DataFrame, symbol: str, required_columns: list) -
     return True
 
 
-@log_info()
+@handle_exceptions
+@log_info
 def insert_financial_data (data: pd.DataFrame, type: str, symbol: str, required_columns: list, insert_query: str) -> int:
     """
         Inserts financial data into the database for a specific company based on its ticker symbol.
