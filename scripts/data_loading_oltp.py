@@ -1,7 +1,7 @@
 import psycopg2
 import warnings
 from scripts.database_connection import get_db_connection
-from scripts.logger import log_info, handle_exceptions
+from utils.logging.logger import log_info, handle_exceptions
 import pandas as pd
 
 @handle_exceptions

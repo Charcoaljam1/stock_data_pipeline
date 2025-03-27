@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2 import sql
 from config.config import DB_CONFIG
-from scripts.logger import logger, log_info, handle_exceptions
+from utils.logging.logger import logger, log_info, handle_exceptions
 from scripts.database_connection import get_db_connection
 
 @handle_exceptions

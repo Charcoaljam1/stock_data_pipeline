@@ -1,4 +1,4 @@
-from logger import log_info, handle_exceptions
+from utils.logging.logger import log_info, handle_exceptions
 import warnings
 
 @handle_exceptions

@@ -3,7 +3,7 @@ from scripts.data_ingestion import get_data
 from scripts.data_transformation import format_data
 from scripts.data_loading_oltp import load_data
 from scripts.database_setup import create_tables
-from scripts.logger import logger, log_info
+from utils.logging.logger import logger, log_info
 
 @log_info()
 def main():

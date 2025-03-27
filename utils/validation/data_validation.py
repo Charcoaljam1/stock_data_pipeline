@@ -1,4 +1,5 @@
 import re
+from config.config import ALPHA_VANTAGE_API_KEY
 
 date_pattern = r'^\d{4}-\d{2}-\d{2}$'  # Matches "YYYY-MM-DD"
 daily_key_pattern = r'^\d\.\s(open|high|low|close|volume)$'  # Matches "1. open", etc.
@@ -95,3 +96,37 @@ def info_validation(info_dict):
             pass
         else:
             raise ValueError(f'Invalid value format for key "{keys}": {values}')
+        
+
+
+
+def input_validation(function: str, symbol: str) -> dict:
+    """Validates API key, function, and symbol."""
+
+    function_mapping = {
+        "daily": "TIME_SERIES_DAILY",
+        "income": "INCOME_STATEMENT",
+        "balance": "BALANCE_SHEET",
+        "cash": "CASH_FLOW",
+        "eps": "EARNINGS",
+        "info": "OVERVIEW"  
+        }
+
+    if not ALPHA_VANTAGE_API_KEY:
+        return {"error": True, "message": "API key is missing. Please check the 'config/config.py' file."}
+    
+    if isinstance(symbol, list):
+        for tick in symbol:
+            if len(tick) > 5:
+                return {"error": True, "message": f"Invalid symbol '{tick}'. Maximum length is 5 characters."}
+            if not tick.isalpha():
+                return {"error": True, "message": f"Invalid symbol '{tick}'. Only alphabetic characters are allowed."}
+    elif isinstance(symbol, str) and len(symbol) > 5:
+        return {"error": True, "message": f"Invalid symbol '{symbol}'. Maximum length is 5 characters."}
+    elif not isinstance(symbol, str) or not symbol.isalpha():
+        return {"error": True, "message": f"Invalid symbol '{symbol}'. Only alphabetic characters are allowed."}
+    
+    if function not in function_mapping:
+        return {"error": True, "message": f"Invalid function '{function}'. Valid options are: {', '.join(function_mapping.keys())}."}
+
+    return {"error": False, "message": "Validation successful."}

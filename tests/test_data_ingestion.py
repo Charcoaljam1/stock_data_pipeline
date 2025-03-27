@@ -1,7 +1,6 @@
 import pytest
 import os
 import json
-import scripts.logger
 import requests
 from unittest.mock import patch, MagicMock
 from scripts.data_ingestion import get_data, input_validation, build_parameters, fetch_api_response, save_data

@@ -1,6 +1,6 @@
 import requests
 import json
-from scripts.logger import log_info, handle_exceptions
+from utils.logging.logger import log_info, handle_exceptions
 import os
 from config.config import ALPHA_VANTAGE_API_KEY
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception

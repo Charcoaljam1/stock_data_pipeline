@@ -1,6 +1,6 @@
 import psycopg2
 from config.config import DB_CONFIG
-from scripts.logger import log_info, logger, handle_exceptions
+from utils.logging.logger import log_info, logger, handle_exceptions
 from contextlib import contextmanager
 
 @contextmanager

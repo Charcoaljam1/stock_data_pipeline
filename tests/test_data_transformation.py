@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from unittest.mock import patch
 from scripts.data_transformation import clean_data, format_data
-from utils.data_utils import clean_daily, clean_income, clean_balance, clean_cash, clean_info
+from utils.cleaning.data_cleaners import clean_daily, clean_income, clean_balance, clean_cash, clean_info
 
 
 # Mocking the clean functions since they are part of external modules
