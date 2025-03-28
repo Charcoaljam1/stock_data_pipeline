@@ -5,9 +5,12 @@ load_dotenv()
 
 ALPHA_VANTAGE_API_KEY = os.getenv("alpha_vantage_api_key")
 DB_CONFIG = {
-    'host': os.getenv('db_endpoint'),
-    'user': os.getenv('db_user'),
-    'password': os.getenv('db_password'),
-    'port': os.getenv('db_port'),
-    'dbname': os.getenv('db_name')
+    'host': os.getenv('DB_ENDPOINT'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'port': os.getenv('DB_PORT'),
+    'dbname': os.getenv('DB_NAME')
 }
+
+RAW_DATA_DIR = os.getenv('RAW_DATA_DIR')
+PROCESSED_DATA_DIR = os.getenv('PROCESSED_DATA_DIR')

@@ -67,6 +67,7 @@ httpx==0.27.0
 idna==3.10
 importlib-metadata==6.11.0
 inflection==0.5.1
+iniconfig==2.1.0
 itsdangerous==2.2.0
 Jinja2==3.1.5
 jmespath==0.10.0
@@ -117,6 +118,7 @@ pycparser==2.22
 Pygments==2.19.1
 PyJWT==2.10.1
 pyparsing==3.2.1
+pytest==8.3.5
 python-daemon==3.1.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
@@ -141,6 +143,7 @@ SQLAlchemy==1.4.54
 SQLAlchemy-JSONField==1.0.2
 SQLAlchemy-Utils==0.41.2
 sqlparse==0.5.3
+-e git+https://github.com/Charcoaljam1/stock_data_pipeline@93aa441fda5295e321d21a288e5c133168ccd85e#egg=stock_pipeline
 tabulate==0.9.0
 tenacity==9.0.0
 termcolor==2.5.0
