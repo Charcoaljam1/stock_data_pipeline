@@ -1,18 +1,17 @@
-
-from config.config import DB_CONFIG
-from sqlalchemy import create_engine, Column, Integer, String, Date, DECIMAL, BigInteger, ForeignKey, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
 import json
 from config.config import PROCESSED_DATA_DIR, RAW_DATA_DIR
 import os
 from utils.logging.logger import log_info
 from utils.exceptions.exception_handling import handle_exceptions
+from config.config import DB_CONFIG
+from sqlalchemy import create_engine, Column, Integer, String, Date, DECIMAL, BigInteger, ForeignKey, UniqueConstraint
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+
 
 # Define base for ORM models
 Base = declarative_base()
 
-# Database connection URL
 DATABASE_URL = f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
 
 class Company(Base):
@@ -174,7 +173,7 @@ class DataStorage:
                     company_df = data["info"]
                     company_data = company_df.to_dict(orient="records")[0]  # Convert first row to dict
 
-                    # Insert company and get company_id (handling duplicates)
+                    # Insert company and get company_id 
                     existing_company = session.query(Company).filter_by(ticker_symbol=symbol).first()
                     if existing_company:
                         company_id = existing_company.company_id
@@ -187,7 +186,7 @@ class DataStorage:
                 # Insert other data types using bulk inserts
                 for key, df in data.items():
                     if key == "info":
-                        continue  # Already handled company info
+                        continue 
 
                     table = TABLE_MAPPING.get(key)
                     if table is None:

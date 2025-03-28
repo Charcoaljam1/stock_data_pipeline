@@ -26,16 +26,16 @@ def handle_exceptions(func):
     def wrapper(*args, **kwargs):
         logger = configure_logger(func.__module__)
 
-        sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
+      #  sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
         actual_func_name = func.__name__
 
         error_data = {
             "status": "error",
             "function": actual_func_name,
-            "args": sanitized_args,
-            "kwargs": sanitized_kwargs
+            # "args": sanitized_args,
+            # "kwargs": sanitized_kwargs
         }
-        error_data["args"] = error_data["args"].to_dict() if isinstance(error_data["args"], pd.DataFrame) else error_data["args"]
+      #  error_data["args"] = error_data["args"].to_dict() if isinstance(error_data["args"], pd.DataFrame) else error_data["args"]
 
         try:
           return func(*args, **kwargs)

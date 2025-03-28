@@ -1,189 +1,39 @@
-import pandas as pd
 from collections import defaultdict
-from utils.logging.logger import log_info, handle_exceptions
-from utils.cleaning.data_cleaners import clean_daily, clean_balance, clean_cash, clean_income, clean_info
+import warnings
+from utils.logging.logger import log_info
+from utils.exceptions.exception_handling import handle_exceptions
+from utils.validation.processed_data_validation import validate_processed_data
+from utils.validation.raw_data_validation import raw_data_validation
+from utils.cleaning.data_cleaners import format_daily, format_financial, format_info
 
+class DataCleaner:
 
-
-
-@handle_exceptions
-def clean_data(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
-    """
-    Cleans and processes data based on the specified type.
-
-    Parameters:
-    df (pd.DataFrame): The input data to be cleaned.
-    data_type (str): The type of data ('daily', 'income', 'balance', 'cash', 'info').
-
-    Returns:
-    pd.DataFrame: The cleaned DataFrame.
-
-    Raises:
-    TypeError: If df is not a pandas DataFrame.
-    ValueError: If an unknown data type is passed.
-    """
-
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Input must be a pandas DataFrame")
-
-    cleaning_functions = {
-        'daily': clean_daily,
-        'income': clean_income,
-        'balance': clean_balance,
-        'cash': clean_cash,
-        'info': clean_info
+    formatting_functions = {
+        'daily': format_daily,
+        'income': format_financial,
+        'balance': format_financial,
+        'cash': format_financial,
+        'info': format_info
         }
-
-    if data_type not in cleaning_functions:
-        raise ValueError(f"Unknown data type '{data_type}'. Expected one of {list(cleaning_functions.keys())}")
-
-    return cleaning_functions[data_type](df)
-
-def format_daily(data, data_type):
-    """Format JSON stock data gotten from the Alpha Vantage API into a pandas DataFrame."""
-
-    time_series = data.get('Time Series (Daily)', None)
-    if time_series is None:
-        raise KeyError("Expected 'Time Series (Daily)' key not found in the data")
-    time_series_df = pd.DataFrame.from_dict(time_series, orient='index')
-    cleaned_time_series_df = clean_data(time_series_df,data_type)
-    cleaned_time_series_df.to_csv(f"data/processed_data/{data['Meta Data']['2. Symbol']}_stock.csv")
-    stock_data = cleaned_time_series_df
-
-    return stock_data
-
-def format_info(data, data_type):
-    """Format JSON company gotten from the Alpha Vantage API into a pandas DataFrame."""
-
-    keys = ['Name', 'SharesOutstanding','Symbol', 'Exchange','Currency','Country','Sector']
-    info = {key: data.get(key, None) for key in keys}
-    if info is None:
-        raise KeyError(" key not found in the data")
-    info_df = pd.DataFrame([info])
-    cleaned_info_df = clean_data(info_df,data_type)
-    cleaned_info_df.to_csv(f"data/processed_data/{data.get('Symbol')}_info.csv", index=False)
-    information = cleaned_info_df
-
-    return information  
-
-def format_financial(data, data_type):
-    """Format JSON financial data gotten from the Alpha Vantage API into a pandas DataFrame."""
-
-    statement = data.get('annualReports', None)
-    if statement is None:
-        raise KeyError("'annualReports' key not found in the data")
-    statement_df = pd.DataFrame.from_dict(statement)
-    cleaned_statement_df = clean_data(statement_df,data_type)
-    cleaned_statement_df.to_csv(f"data/processed_data/{data['symbol']}_{function}_statement.csv", index=False)
-    financial_data = cleaned_statement_df        
-
-    return financial_data
-
-@handle_exceptions
-@log_info
-def format_data(data: pd.DataFrame,function: str,nested=False):
-    """
-    Format JSON data gotten from the Alpha Vantage API into a pandas DataFrame.
     
-    Parameters:
-    - data (dict): The raw JSON data from the Alpha Vantage API.
-    - function (str): The type of data (e.g., 'daily', 'income', 'balance', 'cash', info).
-    - nested (bool): If False, expects a single time series. If True, expects a dictionary of time series.
-    
-    Returns:
-    - pd.DataFrame or dict: A DataFrame or a dictionary of DataFrames depending on the 'nested' argument.
+    def __init__(self, raw_data):
+        self.raw_data = raw_data
+        self.processed_data = defaultdict(lambda: defaultdict(dict))
 
-    Raises:
-    - KeyError: If the expected keys are missing from the data.
+    @log_info
+    @handle_exceptions
+    def transform(self):
+        for symbols, data in self.raw_data.items():
+            for data_types, values in data.items():
+                validation_result = raw_data_validation(values)
+                if validation_result["error"]:
+                    warnings.warn(f'Error validating {symbols} {data_types} data: {validation_result["message"]}')
+                    continue
+                result = DataCleaner.formatting_functions[data_types](values,data_types,symbols)
+                validation_result = validate_processed_data(result, data_types)
+                if validation_result["error"]:
+                    warnings.warn(validation_result["message"])
+                    continue
+                else:
+                    self.processed_data[symbols][data_types]
 
-    Examples:
-        # Example for non-nested daily data
-        format_data(data, function='daily', nested=False)
-
-        # Example for nested EPS data
-        format_data(data, function='eps', nested=True)
-    """
-    # Formats stock data
-    if function == 'daily':
-        if nested:
-            stock_data = {}
-            for key, values in data.items():
-                time_series = values.get('Time Series (Daily)', None)
-                if time_series is None:
-                    raise KeyError(f"[{function}] Expected 'Time Series (Daily)' key not found in the nested data for {key}")
-                time_series_df = pd.DataFrame.from_dict(time_series, orient='index')
-                cleaned_time_series_df = clean_data(time_series_df,function)
-                cleaned_time_series_df.to_csv(f"data/processed_data/{key}_stock.csv")
-                stock_data[key] = cleaned_time_series_df
-
-            return stock_data
-             
-        else:
-            time_series = data.get('Time Series (Daily)', None)
-            if time_series is None:
-                raise KeyError("Expected 'Time Series (Daily)' key not found in the data")
-            time_series_df = pd.DataFrame.from_dict(time_series, orient='index')
-            cleaned_time_series_df = clean_data(time_series_df,function)
-            cleaned_time_series_df.to_csv(f"data/processed_data/{data['Meta Data']['2. Symbol']}_stock.csv")
-            stock_data = cleaned_time_series_df
-    
-            return stock_data
-    
-
-    # Formats info data
-    elif function == 'info':
-        # Formats nested dictionaries
-        if nested:
-            information = {}
-            for key, values in data.items():
-                keys = ['Name', 'SharesOutstanding', 'Symbol','Exchange','Currency','Country','Sector']
-                info = {k: values.get(k, None) for k in keys}
-                if info is None:
-                    raise KeyError(f"[{function}] Expected 'Name' key not found in the nested data for {key}")
-                info_df = pd.DataFrame([info])
-                cleaned_info_df = clean_data(info_df,function)
-                cleaned_info_df.to_csv(f"data/processed_data/{key}_info.csv", index=False)
-                information[key] = cleaned_info_df
-
-            return information
-
-        #Formats simple dictionaries
-        else:
-            keys = ['Name', 'SharesOutstanding','Symbol', 'Exchange','Currency','Country','Sector']
-            info = {key: data.get(key, None) for key in keys}
-        if info is None:
-            raise KeyError(" key not found in the data")
-        info_df = pd.DataFrame([info])
-        cleaned_info_df = clean_data(info_df,function)
-        cleaned_info_df.to_csv(f"data/processed_data/{data.get('Symbol')}_info.csv", index=False)
-        information = cleaned_info_df
-    
-        return information        
-
-    # Formats income statement, cash flow, and balance sheet data
-    else:
-        # Formats nested dictionaries
-        if nested:
-            financial_data = {}
-            for key, values in data.items():
-                statement = values.get('annualReports', None)
-                if statement is None:
-                    raise KeyError(f"[{function}] Expected 'annualReports' key not found in the nested data for {key}")
-                statement_df = pd.DataFrame.from_dict(statement)
-                cleaned_statement_df = clean_data(statement_df,function)
-                cleaned_statement_df.to_csv(f"data/processed_data/{key}_{function}_statement.csv", index=False)
-                financial_data[key] = cleaned_statement_df
-
-            return financial_data
-
-        # Formats simple dictionaries
-        else:
-            statement = data.get('annualReports', None)
-            if statement is None:
-                raise KeyError("'annualReports' key not found in the data")
-            statement_df = pd.DataFrame.from_dict(statement)
-            cleaned_statement_df = clean_data(statement_df,function)
-            cleaned_statement_df.to_csv(f"data/processed_data/{data['symbol']}_{function}_statement.csv", index=False)
-            financial_data = cleaned_statement_df        
-
-            return financial_data

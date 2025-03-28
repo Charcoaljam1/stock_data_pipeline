@@ -1,11 +1,12 @@
 import pandas as pd
 from utils.exceptions.exception_handling import handle_exceptions
+from utils.logging.logger import log_info
 
 
 def format_daily(data, data_type,symbol):
     """Format JSON stock data gotten from the Alpha Vantage API into a pandas DataFrame."""
 
-    time_series = data.get('Time Series (Daily)')
+    time_series = data.get('Time Series (Daily)', None)
     time_series_df = pd.DataFrame.from_dict(time_series, orient='index')
     cleaned_time_series_df = clean_data(time_series_df,data_type)
 
@@ -38,7 +39,7 @@ def format_financial(data, data_type,symbol):
     return cleaned_statement_df 
 
 
-
+@log_info
 @handle_exceptions
 def clean_data(df: pd.DataFrame, data_type: str) -> pd.DataFrame:
     """
@@ -88,9 +89,6 @@ def clean_daily(df):
     Returns:
     pd.DataFrame: Cleaned DataFrame with updated column names and data types.
     """
-    required_columns = ['1. open', '4. close', '5. volume']
-    missing_columns = [col for col in required_columns if col not in df.columns]
-
     df.drop(columns=[ '2. high', '3. low'], inplace=True, errors='ignore')
     df.index.name = 'Date'
     df.index = pd.to_datetime(df.index, errors="coerce")

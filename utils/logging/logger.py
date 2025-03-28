@@ -53,21 +53,21 @@ def log_info(func):
     def wrapper(*args, **kwargs):
         logger = configure_logger(func.__module__)
         actual_func_name = func.__name__
-        sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
+       # sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
 
         info_data = {
             "status": "starting",
             "function": actual_func_name,
-            "args": sanitized_args,
-            "kwargs": sanitized_kwargs,
-            "_info_message": f"{actual_func_name} function is starting"
+            # "args": sanitized_args,
+            # "kwargs": sanitized_kwargs,
+            "info_message": f"{actual_func_name} function is starting"
         }
         logger.info(json.dumps(info_data, indent=4), extra={"custom_funcName": actual_func_name})
 
         result = func(*args, **kwargs)  # Execute the function
 
         info_data["status"] = "completed"
-        info_data["_info_message"] = f"{actual_func_name} function has completed"
+        info_data["info_message"] = f"{actual_func_name} function has completed"
         logger.info(json.dumps(info_data, indent=4), extra={"custom_funcName": actual_func_name})
 
         return result  # Preserve function output
