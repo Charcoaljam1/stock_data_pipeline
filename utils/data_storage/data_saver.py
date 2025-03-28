@@ -1,9 +1,28 @@
 import json
 from config.config import PROCESSED_DATA_DIR, RAW_DATA_DIR
+from config.config import DB_CONFIG
 import os
-import pandas as pd
 from utils.logging.logger import log_info
 from utils.exceptions.exception_handling import handle_exceptions
+from sqlalchemy import create_engine, Column, Integer, String, DECIMAL, Date, ForeignKey, BIGINT
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+
+# Database connection URL
+DATABASE_URL = f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
+
+# Create the engine
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
+# Base class for ORM models
+Base = declarative_base()
+
+# Create a session factory
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+
+
+
+
 
 class DataStorage:
     PROCESSED_DATA_DIR = PROCESSED_DATA_DIR
