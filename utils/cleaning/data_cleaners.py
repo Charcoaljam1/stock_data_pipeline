@@ -1,9 +1,10 @@
 import pandas as pd
 from utils.exceptions.exception_handling import handle_exceptions
 from utils.logging.logger import log_info
+import json
 
 
-def format_daily(data, data_type,symbol):
+def format_daily(data, data_type):
     """Format JSON stock data gotten from the Alpha Vantage API into a pandas DataFrame."""
 
     time_series = data.get('Time Series (Daily)', None)
@@ -14,7 +15,7 @@ def format_daily(data, data_type,symbol):
 
 
 
-def format_info(data, data_type, symbol):
+def format_info(data, data_type):
     """Format JSON company gotten from the Alpha Vantage API into a pandas DataFrame."""
 
     keys = ['Name', 'SharesOutstanding','Symbol', 'Exchange','Currency','Country','Sector']
@@ -27,7 +28,7 @@ def format_info(data, data_type, symbol):
 
 
 
-def format_financial(data, data_type,symbol):
+def format_financial(data, data_type):
     """Format JSON financial data gotten from the Alpha Vantage API into a pandas DataFrame."""
 
     statement = data.get('annualReports', None)
@@ -315,6 +316,7 @@ def clean_cash(df):
         'netIncome': 'net_income'
      }
 
+    
     df.rename(columns=column_name_map, inplace=True)
 
     # Define and select relevant columns
@@ -366,5 +368,8 @@ def clean_info(df):
     }
 
     df.rename(columns=column_name_map, inplace=True)
+    df['total_shares'] = df['total_shares'].apply(pd.to_numeric, errors="coerce")
 
     return df
+
+

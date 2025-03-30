@@ -10,7 +10,7 @@ def validate_processed_daily_data(df: pd.DataFrame) -> dict:
     Returns:
     dict: Validation result with 'error' and 'message' keys.
     """
-    required_columns = ['Date', 'Open', 'Close', 'Volume']
+    required_columns = ['Open', 'Close', 'Volume']
     if not isinstance(df, pd.DataFrame):
         return {"error": True, "message": "Input data must be a pandas DataFrame."}
 
@@ -18,8 +18,8 @@ def validate_processed_daily_data(df: pd.DataFrame) -> dict:
     if missing_columns:
         return {"error": True, "message": f"Missing required columns: {missing_columns}"}
 
-    if not pd.api.types.is_datetime64_any_dtype(df['Date']):
-        return {"error": True, "message": "Column 'Date' must be of datetime type."}
+    if not isinstance(df.index, pd.DatetimeIndex) and (df.index.name == 'Date'):
+        return {"error": True, "message": "Index 'Date' must be of datetime type."}
 
     numeric_columns = ['Open', 'Close', 'Volume']
     for col in numeric_columns:

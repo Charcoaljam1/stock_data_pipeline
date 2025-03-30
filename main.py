@@ -1,50 +1,21 @@
-from scripts.user_input import get_stock_symbols
-from scripts.data_ingestion import get_data
-from scripts.data_transformation import format_data
-from scripts.data_loading_oltp import load_data
-from scripts.database_setup import create_tables
-from utils.logging.logger import logger, log_info
+from scripts.data_ingestion import StockFetcher
+from scripts.data_transformation import DataCleaner
+from scripts.data_saving import DataStorage
+from utils.logging.logger import log_info
+from utils.exceptions.exception_handling import handle_exceptions
 
 @log_info()
+@handle_exceptions
 def main():
     
-    # Step 1: Set up the database
-    logger.info("Setting up the database...")
-    create_tables()
-    logger.info("Database setup complete.")
-
-    # Step 2: Define the symbols and functions based on user input
-    try:
-        symbols = get_stock_symbols()
-    except Exception as e:
-        print(e)
-    
-    functions = ['info', 'daily', 'balance', 'income', 'cash'] 
-    nested = len(symbols) > 1
-
-    # Step 3: Data Ingestion
-    logger.info("Starting data ingestion...")
-    raw_data = {}
-    for function in functions:
-        raw_data[function] = get_data(symbols, function)
-    logger.info("Data ingestion complete.")
-
-    # Step 4: Data Transformation
-    logger.info("Starting data transformation...")
-    nested = isinstance(symbols, list)
-    transformed_data = {}
-    for function in functions:
-        transformed_data[function] = format_data(raw_data[function], function, nested=nested)
-    logger.info("Data transformation complete.")
-
-    # Step 5: Data Loading
-    logger.info("Starting data loading...")
-    for function, data in transformed_data.items():
-        load_data(data, function, nested=nested)
-    logger.info("Data loading complete.")
-
-    logger.info("Pipeline execution completed successfully.")
-
+    fetch = StockFetcher(['AAPL','MSFT','IBM','TSLA'],['info','daily','cash','income','balance'])
+    clean = DataCleaner(fetch.data)
+    save = DataStorage()
+    save.save_raw_data(fetch.data)
+    save.save_processed_data(clean.processed_data)
+    save.create_tables()
+    save.save_to_database(clean.processed_data)
+ 
 
 if __name__ == "__main__":
     main()

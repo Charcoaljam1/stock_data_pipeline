@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ALPHA_VANTAGE_API_KEY = os.getenv("alpha_vantage_api_key")
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 DB_CONFIG = {
     'host': os.getenv('DB_ENDPOINT'),
     'user': os.getenv('DB_USER'),

@@ -26,16 +26,12 @@ def handle_exceptions(func):
     def wrapper(*args, **kwargs):
         logger = configure_logger(func.__module__)
 
-      #  sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
         actual_func_name = func.__name__
 
         error_data = {
             "status": "error",
             "function": actual_func_name,
-            # "args": sanitized_args,
-            # "kwargs": sanitized_kwargs
         }
-      #  error_data["args"] = error_data["args"].to_dict() if isinstance(error_data["args"], pd.DataFrame) else error_data["args"]
 
         try:
           return func(*args, **kwargs)
@@ -43,6 +39,7 @@ def handle_exceptions(func):
         except requests.exceptions.Timeout as e:
             error_data["error_type"] = type(e).__name__
             error_data["error_message"] = f'Timeout occured while fetching data. {str(e)}. Retrying...'
+            error_data["traceback"] = traceback.format_exc().splitlines()
         
             logger.error(json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
             logger.debug(traceback.format_exc())
@@ -51,6 +48,7 @@ def handle_exceptions(func):
         except requests.exceptions.HTTPError as e:
             error_data["error_type"] = type(e).__name__
             error_data["error_message"] = f"HTTP Error"
+            error_data["traceback"] = traceback.format_exc().splitlines()
 
             if e.response.status_code in status_code_to_message:
                 error_data["error_message"] += f" ({status_code_to_message[e.response.status_code]})"
@@ -64,6 +62,7 @@ def handle_exceptions(func):
         except requests.exceptions.RequestException as e:
             error_data["error_type"] = type(e).__name__
             error_data["error_message"] = f"Request failed: {str(e)}"
+            error_data["traceback"] = traceback.format_exc().splitlines()
 
             logger.critical(json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})
             logger.debug(traceback.format_exc())
@@ -74,6 +73,7 @@ def handle_exceptions(func):
             
             error_data["error_type"] = type(e).__name__
             error_data["error_message"] = f"Request failed: {original_exception}"
+            error_data["traceback"] = traceback.format_exc().splitlines()
 
             if isinstance(original_exception, requests.exceptions.HTTPError):
                 error_data["error_message"] = f"HTTPError: {original_exception}"
@@ -85,6 +85,7 @@ def handle_exceptions(func):
         except Exception as e:
             error_data["error_type"] = type(e).__name__
             error_data["error_message"] = str(e)
+            error_data["traceback"] = traceback.format_exc().splitlines()
 
 
             logger.error(json.dumps(error_data, indent=4), extra={"custom_funcName": actual_func_name})

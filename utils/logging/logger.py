@@ -1,12 +1,9 @@
 import os
 import json
 import logging
-import traceback
-import requests
-
+import warnings
 from functools import wraps
 from logging.handlers import RotatingFileHandler
-import pandas as pd
 
 # Global logger configuration
 LOG_DIRECTORY = "logs"
@@ -24,7 +21,7 @@ def configure_logger(module_name: str) -> logging.Logger:
         formatter = logging.Formatter("%(asctime)s - %(custom_funcName)s - %(levelname)s - %(message)s ")
         handler.setFormatter(formatter)
 
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
         logger.addHandler(handler)
         logger.propagate = False  # Prevent handler duplication
 
@@ -53,18 +50,26 @@ def log_info(func):
     def wrapper(*args, **kwargs):
         logger = configure_logger(func.__module__)
         actual_func_name = func.__name__
-       # sanitized_args, sanitized_kwargs = sanitize_args(args, kwargs)
 
         info_data = {
             "status": "starting",
             "function": actual_func_name,
-            # "args": sanitized_args,
-            # "kwargs": sanitized_kwargs,
             "info_message": f"{actual_func_name} function is starting"
         }
         logger.info(json.dumps(info_data, indent=4), extra={"custom_funcName": actual_func_name})
 
-        result = func(*args, **kwargs)  # Execute the function
+        # Capture warnings during function execution
+        with warnings.catch_warnings(record=True) as captured_warnings:
+            warnings.simplefilter("always")  # Ensure all warnings are caught
+            result = func(*args, **kwargs)  # Execute the function
+
+            # Log captured warnings
+            for warning in captured_warnings:
+                logger.warning(
+                    f"Warning raised: {warning.message}",
+                    extra={"custom_funcName": actual_func_name}
+                )
+
 
         info_data["status"] = "completed"
         info_data["info_message"] = f"{actual_func_name} function has completed"

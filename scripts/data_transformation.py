@@ -25,15 +25,15 @@ class DataCleaner:
     def transform(self):
         for symbols, data in self.raw_data.items():
             for data_types, values in data.items():
-                validation_result = raw_data_validation(values)
+                validation_result = raw_data_validation(values,data_types)
                 if validation_result["error"]:
                     warnings.warn(f'Error validating {symbols} {data_types} data: {validation_result["message"]}')
                     continue
-                result = DataCleaner.formatting_functions[data_types](values,data_types,symbols)
+                result = DataCleaner.formatting_functions[data_types](values,data_types)
                 validation_result = validate_processed_data(result, data_types)
                 if validation_result["error"]:
-                    warnings.warn(validation_result["message"])
+                    warnings.warn(f"Error validating {symbols} {data_types} data: {validation_result["message"]}")
                     continue
                 else:
-                    self.processed_data[symbols][data_types]
+                    self.processed_data[symbols][data_types] = result
 

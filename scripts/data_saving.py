@@ -138,11 +138,7 @@ class DataStorage:
                 os.makedirs(os.path.dirname(file_path), exist_ok=True)
                 values.to_csv(file_path, index=False)
 
-    def _save_json(self, file_path: str, data: dict):
-        """Helper function to save data as JSON."""
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w") as f:
-            json.dump(data, f)
+
 
     @log_info
     @handle_exceptions
@@ -211,5 +207,11 @@ class DataStorage:
         finally:
             session.close()
 
+
+    def _save_json(self, file_path: str, data: dict):
+        """Helper function to save data as JSON."""
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=4)
 
 
