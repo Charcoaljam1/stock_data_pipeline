@@ -69,8 +69,11 @@ def handle_exceptions(func):
 
             raise  # Re-raise exception
         except RetryError as e:
-            original_exception = e.last_attempt.exception()
-            
+            if hasattr(e.last_attempt, "result"):  # Ensure last_attempt is valid
+                original_exception = e.last_attempt.result()
+            else:
+                original_exception = e.last_attempt  # Fallback
+                    
             error_data["error_type"] = type(e).__name__
             error_data["error_message"] = f"Request failed: {original_exception}"
             error_data["traceback"] = traceback.format_exc().splitlines()

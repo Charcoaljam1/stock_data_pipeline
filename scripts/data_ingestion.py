@@ -11,8 +11,21 @@ class StockFetcher:
    
 
     def __init__(self, symbols, data_types, url="https://www.alphavantage.co/query"):
-        self.symbols = symbols
-        self.data_types = data_types
+         # Ensure symbols are uppercase if it's a string or a list of strings
+        if isinstance(symbols, str):
+            self.symbols = [symbols.upper()]
+        elif isinstance(symbols, list):
+            self.symbols = [symbol.upper() for symbol in symbols]
+        else:
+            raise TypeError("symbols must be a string or a list of strings")
+        
+        # Ensure data_types are lowercase if it's a string or a list of strings
+        if isinstance(data_types, str):
+            self.data_types = [data_types.lower()]
+        elif isinstance(data_types, list):
+            self.data_types = [dtype.lower() for dtype in data_types]
+        else:
+            raise TypeError("data_types must be a string or a list of strings")
         self.data = defaultdict(lambda: defaultdict(dict))
         self.url = url
         
@@ -35,8 +48,5 @@ class StockFetcher:
                 if validation_result["error"]:
                     warnings.warn(f'Error validating {symbol} {data_type} data: {validation_result["message"]}')
                     continue
-                elif symbol not in self.data:
-                    self.data[symbol] = {}
-                if data_type not in self.data[symbol]:
-                    self.data[symbol][data_type] = {}
+                
                 self.data[symbol][data_type] = response

@@ -1,4 +1,5 @@
 import pytest
+import pandas as pd
 from scripts.data_transformation import DataCleaner
 
 
@@ -71,7 +72,7 @@ def sample_raw_data():
     "AssetType": "Common Stock",
     "Name": "Apple Inc",
     "Description": "Apple Inc. is an American multinational technology company that specializes in consumer electronics, computer software, and online services. Apple is the world's largest technology company by revenue (totalling $274.5 billion in 2020) and, since January 2021, the world's most valuable company. As of 2021, Apple is the world's fourth-largest PC vendor by unit sales, and fourth-largest smartphone manufacturer. It is one of the Big Five American information technology companies, along with Amazon, Google, Microsoft, and Facebook.",
-    "CIK": "320193",
+    "SharesOutstanding": "320193",
     "Exchange": "NASDAQ",
     "Currency": "USD",
     "Country": "USA",
@@ -615,11 +616,12 @@ def data_cleaner(sample_raw_data):
 
 def test_transform(data_cleaner):
     """Test the transform method of DataCleaner."""
-    transformed_data = data_cleaner.transform()
+
+    data_cleaner.transform()
 
     assert "AAPL" in data_cleaner.processed_data  # Ensure AAPL symbol exists
     assert "daily" in data_cleaner.processed_data["AAPL"]  # Ensure daily data exists
-    assert isinstance(data_cleaner.processed_data["MSFT"]["daily"], dict) # Ensure daily data is a dictionary
+    assert isinstance(data_cleaner.processed_data["MSFT"]["daily"], pd.DataFrame) # Ensure daily data is a dataframe
 
 
 def test_transform_with_empty_data():

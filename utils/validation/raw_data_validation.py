@@ -58,6 +58,12 @@ def daily_validation(daily_dict):
     #     if 'Time Series (Daily)' not in values:
     #         return {"error": True, "message": "Missing 'Time Series (Daily)' key."}
     required_columns = ['1. open', '2. high', '3. low', '4. close', '5. volume']
+
+    if not isinstance(daily_dict, dict):
+        return {"error": True, "message": "Data must be a dictionary."}
+    
+    if "Time Series (Daily)" not in daily_dict.keys():
+            return {"error": True, "message": "Missing 'Time Series (Daily)' key."}
         
     for date, inner_dict in daily_dict.get('Time Series (Daily)').items():
         if not re.match(date_pattern, str(date)):
@@ -167,7 +173,7 @@ def info_validation(info_dict):
 
 
 
-def input_validation(function: str, symbol: str) -> dict:
+def input_validation(function: str | list, symbol: str| list) -> dict:
     """Validates API key, function, and symbol."""
 
     function_mapping = {
