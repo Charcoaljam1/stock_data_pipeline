@@ -183,5 +183,9 @@ cython_debug/
 .log
 logs/
 
-data/processed_data/
-data/raw_data/
+#Ignore all files in the data directory
+data/processed_data/*
+data/raw_data/*
+
+!data/processed_data/.keep
+!data/raw_data/.keep
