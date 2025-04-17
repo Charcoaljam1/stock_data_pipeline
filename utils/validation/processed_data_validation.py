@@ -10,7 +10,7 @@ def validate_processed_daily_data(df: pd.DataFrame) -> dict:
     Returns:
     dict: Validation result with 'error' and 'message' keys.
     """
-    required_columns = ['Open', 'Close', 'Volume']
+    required_columns = ['open', 'close', 'volume']
     if not isinstance(df, pd.DataFrame):
         return {"error": True, "message": "Input data must be a pandas DataFrame."}
 
@@ -18,10 +18,10 @@ def validate_processed_daily_data(df: pd.DataFrame) -> dict:
     if missing_columns:
         return {"error": True, "message": f"Missing required columns: {missing_columns}"}
 
-    if not isinstance(df.index, pd.DatetimeIndex) and (df.index.name == 'Date'):
-        return {"error": True, "message": "Index 'Date' must be of datetime type."}
+    if not pd.api.types.is_datetime64_any_dtype(df['date']):
+        return {"error": True, "message": "'date' must be of datetime type."}
 
-    numeric_columns = ['Open', 'Close', 'Volume']
+    numeric_columns = ['open', 'close', 'volume']
     for col in numeric_columns:
         if not pd.api.types.is_numeric_dtype(df[col]):
             return {"error": True, "message": f"Column '{col}' must be numeric."}
@@ -70,10 +70,10 @@ def validate_processed_financial_data(df: pd.DataFrame, data_type: str) -> dict:
     dict: Validation result with 'error' and 'message' keys.
     """
     required_columns_map = {
-        'income': ['fiscal_date_ending', 'total_revenue', 'gross_profit', 'operating_income', 'net_income', 'ebit'],
-        'balance': ['fiscal_date_ending', 'total_current_assets', 'total_non_current_assets', 
+        'income': ['date', 'total_revenue', 'gross_profit', 'operating_income', 'net_income', 'ebit'],
+        'balance': ['date', 'total_current_assets', 'total_non_current_assets', 
                     'total_current_liabilities', 'total_non_current_liabilities', 'total_shareholder_equity'],
-        'cash': ['fiscal_date_ending', 'operating_cashflow', 'capital_expenditures', 
+        'cash': ['date', 'operating_cashflow', 'capital_expenditures', 
                  'cashflow_from_investment', 'cashflow_from_financing', 'dividend_payout']
     }
 
@@ -88,10 +88,10 @@ def validate_processed_financial_data(df: pd.DataFrame, data_type: str) -> dict:
     if missing_columns:
         return {"error": True, "message": f"Missing required columns: {missing_columns}"}
 
-    if not pd.api.types.is_datetime64_any_dtype(df['fiscal_date_ending']):
-        return {"error": True, "message": "Column 'fiscal_date_ending' must be of datetime type."}
+    if not pd.api.types.is_datetime64_any_dtype(df['date']):
+        return {"error": True, "message": "Column 'date' must be of datetime type."}
 
-    numeric_columns = [col for col in required_columns if col != 'fiscal_date_ending']
+    numeric_columns = [col for col in required_columns if col != 'date']
     for col in numeric_columns:
         if not pd.api.types.is_numeric_dtype(df[col]):
             return {"error": True, "message": f"Column '{col}' must be numeric."}

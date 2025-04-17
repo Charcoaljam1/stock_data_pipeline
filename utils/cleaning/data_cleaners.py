@@ -91,17 +91,19 @@ def clean_daily(df):
     pd.DataFrame: Cleaned DataFrame with updated column names and data types.
     """
     df.drop(columns=[ '2. high', '3. low'], inplace=True, errors='ignore')
-    df.index.name = 'Date'
-    df.index = pd.to_datetime(df.index, errors="coerce")
+    df.index.name = 'date'
+    df.reset_index(inplace=True)
+    df['date'] = pd.to_datetime(df['date'], errors="coerce")
+
     
 
     df.rename(columns={
-        "1. open": "Open",
-        "4. close": "Close",
-        "5. volume": "Volume"
+        "1. open": "open",
+        "4. close": "close",
+        "5. volume": "volume"
     }, inplace=True)
 
-    df[['Open','Close','Volume']] = df[['Open','Close','Volume']].apply(pd.to_numeric, errors="coerce")
+    df[['open','close','volume']] = df[['open','close','volume']].apply(pd.to_numeric, errors="coerce")
 
     return df
 
@@ -123,7 +125,7 @@ def clean_balance(df):
     """
   
     column_name_map = {
-        'fiscalDateEnding': 'fiscal_date_ending',
+        'fiscalDateEnding': 'date',
         'reportedCurrency': 'reported_currency',
         'totalAssets': 'total_assets',
         'totalCurrentAssets': 'total_current_assets',
@@ -167,7 +169,7 @@ def clean_balance(df):
 
     # Define and select relevant columns
     columns_to_keep = [
-            'fiscal_date_ending', 'total_current_assets', 'total_non_current_assets',
+            'date', 'total_current_assets', 'total_non_current_assets',
             'total_current_liabilities', 'total_non_current_liabilities',
             'total_shareholder_equity', 'short_term_debt', 'long_term_debt',
             'retained_earnings', 'cash_and_cash_equivalents'
@@ -176,7 +178,7 @@ def clean_balance(df):
     # Using `.filter()` to prevent KeyError if a column is missing
     df = df.filter(items=columns_to_keep)
     
-    df['fiscal_date_ending'] = pd.to_datetime(df['fiscal_date_ending'])
+    df['date'] = pd.to_datetime(df['date'])
 
     # Convert financial values to float64 safely
     numeric_columns = [
@@ -208,7 +210,7 @@ def clean_income(df):
     """
 
     column_name_map = {
-        'fiscalDateEnding': 'fiscal_date_ending',
+        'fiscalDateEnding': 'date',
         'reportedCurrency': 'reported_currency',
         'grossProfit': 'gross_profit',
         'totalRevenue': 'total_revenue',
@@ -240,7 +242,7 @@ def clean_income(df):
 
     # Define and select relevant columns
     columns_to_keep = [
-        'fiscal_date_ending', 'total_revenue', 'gross_profit',
+        'date', 'total_revenue', 'gross_profit',
         'operating_income', 'net_income',
         'interest_and_debt_expense', 'ebit'
     ]
@@ -248,7 +250,7 @@ def clean_income(df):
     # Using `.filter()` to prevent KeyError if a column is missing
     df = df.filter(items=columns_to_keep)
 
-    df['fiscal_date_ending'] = pd.to_datetime(df['fiscal_date_ending'])
+    df['date'] = pd.to_datetime(df['date'])
 
     # Convert financial values to float64 safely
     numeric_columns = [
@@ -260,9 +262,9 @@ def clean_income(df):
     df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors="coerce")
 
     # Engineer columns 
-    df['gross_margin'] = (df['gross_profit']/df['total_revenue']) * 100
-    df['operating_margin'] = (df['operating_income']/df['total_revenue']) * 100
-    df['ebit_margin'] = (df['ebit']/df['total_revenue']) * 100
+    df['gross_margin'] = ((df['gross_profit']/df['total_revenue']) * 100).round(2)
+    df['operating_margin'] = ((df['operating_income']/df['total_revenue']) * 100).round(2)
+    df['ebit_margin'] = ((df['ebit']/df['total_revenue']) * 100).round(2)
 
     return df 
 
@@ -285,7 +287,7 @@ def clean_cash(df):
     """
 
     column_name_map = {
-        'fiscalDateEnding': 'fiscal_date_ending',
+        'fiscalDateEnding': 'date',
         'reportedCurrency': 'reported_currency',
         'operatingCashflow': 'operating_cashflow',
         'paymentsForOperatingActivities': 'payments_for_operating_activities',
@@ -321,14 +323,14 @@ def clean_cash(df):
 
     # Define and select relevant columns
     columns_to_keep = [
-        'fiscal_date_ending', 'operating_cashflow', 'capital_expenditures',
+        'date', 'operating_cashflow', 'capital_expenditures',
         'cashflow_from_investment', 'cashflow_from_financing',
         'dividend_payout', 'debt_repayments'
     ]
 
     df = df.filter(items=columns_to_keep)
 
-    df['fiscal_date_ending'] = pd.to_datetime(df['fiscal_date_ending'])
+    df['date'] = pd.to_datetime(df['date'])
 
     numeric_columns = [
         'operating_cashflow', 'capital_expenditures',
